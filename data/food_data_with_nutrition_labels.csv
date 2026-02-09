@@ -1,0 +1,65 @@
+fdc_id,description,inferred_category,nutrition_roles,freq_groups,diversity_cluster,risk_flags
+167702,"Oil, flaxseed, cold pressed",oil_omega6_la,"carrier_ALA,carrier_LA",,oil_cluster,
+168390,"Asparagus, cooked, boiled, drained",vegetable,"carrier_ALA,carrier_VitE,vitA_dense",,vegetable_cluster,vitA_upper_risk
+168433,"Mountain yam, hawaii, cooked, steamed, without salt",vegetable,,,vegetable_cluster,
+168449,"Pumpkin, cooked, boiled, drained, without salt",vegetable,"carrier_VitE,vitA_dense",,vegetable_cluster,vitA_upper_risk
+168463,"Spinach, cooked, boiled, drained, without salt",vegetable,"carrier_ALA,carrier_VitE,vitA_dense",,vegetable_cluster,vitA_upper_risk
+168484,"Sweet potato, cooked, boiled, without skin",vegetable,"carrier_VitE,vitA_dense",,sweet_potato_family,vitA_upper_risk
+168568,"Carrots, baby, raw",vegetable,vitA_dense,,vegetable_cluster,vitA_upper_risk
+168626,"Beef, variety meats and by-products, liver, cooked, braised",organ_liver,"carrier_VitD,vitA_dense",liver_day,beef_family,vitA_upper_risk
+168873,"Oat bran, cooked",starch_grain,carrier_LA,,oat_family,
+168875,"Rice, brown, medium-grain, cooked (Includes foods for USDA's Food Distribution Program)",starch_grain,,,rice_family,
+168917,"Quinoa, cooked",starch_grain,"carrier_ALA,carrier_EPA_DHA,carrier_LA",,starch_cluster,
+169211,"Bamboo shoots, cooked, boiled, drained, without salt",vegetable,carrier_ALA,,vegetable_cluster,
+169225,"Cucumber, peeled, raw",vegetable,"carrier_ALA,vitA_dense",,vegetable_cluster,vitA_upper_risk
+169283,"Soybeans, green, cooked, boiled, drained, without salt",vegetable,"carrier_ALA,carrier_LA,vitA_dense",,vegetable_cluster,vitA_upper_risk
+169292,"Squash, summer, zucchini, includes skin, cooked, boiled, drained, without salt",vegetable,"carrier_ALA,carrier_VitE,vitA_dense",,vegetable_cluster,vitA_upper_risk
+169448,"Beef, variety meats and by-products, heart, cooked, simmered",organ_other,,,beef_family,
+169486,"Beef, composite of trimmed retail cuts, separable lean and fat, trimmed to 1/8"" fat, choice, cooked",meat_moderate,carrier_EPA_DHA,,beef_family,
+169704,"Rice, brown, long-grain, cooked (Includes foods for USDA's Food Distribution Program)",starch_grain,,,rice_family,
+169967,"Broccoli, cooked, boiled, drained, without salt",vegetable,"carrier_ALA,carrier_VitE,vitA_dense",,vegetable_cluster,vitA_upper_risk
+169999,"Corn, sweet, yellow, cooked, boiled, drained, without salt",vegetable,vitA_dense,,vegetable_cluster,vitA_upper_risk
+170072,"Yam, cooked, boiled, drained, or baked, without salt",vegetable,vitA_dense,,vegetable_cluster,vitA_upper_risk
+170209,"Beef, composite of trimmed retail cuts, separable lean only, trimmed to 0"" fat, choice, cooked",meat_lean,carrier_EPA_DHA,,beef_family,
+170285,"Barley, pearled, cooked",starch_grain,,,starch_cluster,
+170394,"Carrots, cooked, boiled, drained, without salt",vegetable,"carrier_VitE,vitA_dense",,vegetable_cluster,vitA_upper_risk
+170407,"Collards, cooked, boiled, drained, without salt",vegetable,"carrier_ALA,carrier_VitE,vitA_dense",,vegetable_cluster,vitA_upper_risk
+170440,"Potatoes, boiled, cooked without skin, flesh, without salt",vegetable,,,vegetable_cluster,
+170490,"Squash, winter, all varieties, cooked, baked, without salt",vegetable,"carrier_ALA,vitA_dense",,vegetable_cluster,vitA_upper_risk
+171016,"Oil, sesame, salad or cooking",oil_omega6_la,carrier_LA,,oil_cluster,
+171025,"Oil, sunflower, linoleic, (approx. 65%)",oil_omega6_la,"carrier_LA,carrier_VitE",,oil_cluster,
+171027,"Oil, safflower, salad or cooking, high oleic (primary safflower oil of commerce)",oil_omega6_la,"carrier_LA,carrier_VitE",,oil_cluster,
+171059,"Chicken, heart, all classes, cooked, simmered",organ_other,"carrier_LA,vitA_dense",,chicken_family,vitA_upper_risk
+171061,"Chicken, liver, all classes, cooked, simmered",organ_liver,vitA_dense,liver_day,chicken_family,vitA_upper_risk
+171117,"Chicken, ground, crumbles, cooked, pan-browned",meat_moderate,"carrier_EPA_DHA,carrier_LA",,chicken_family,
+171205,"Beef, chuck for stew, separable lean and fat, choice, cooked, braised",meat_lean,carrier_EPA_DHA,,beef_family,
+171478,"Chicken, broilers or fryers, breast, meat only, cooked, stewed",meat_lean,"carrier_EPA_DHA,vitA_dense",,chicken_family,vitA_upper_risk
+171485,"Turkey, all classes, heart, cooked, simmered",organ_other,"carrier_EPA_DHA,carrier_LA,vitA_dense",,chicken_family,vitA_upper_risk
+171487,"Turkey, all classes, liver, cooked, simmered",organ_liver,"carrier_EPA_DHA,carrier_LA,vitA_dense",liver_day,chicken_family,vitA_upper_risk
+171492,"Turkey, all classes, breast, meat and skin, cooked, roasted",meat_lean,"carrier_EPA_DHA,carrier_LA",,chicken_family,
+171494,"Turkey, all classes, leg, meat and skin, cooked, roasted",meat_moderate,"carrier_EPA_DHA,carrier_LA",,chicken_family,
+171956,"Fish, cod, Atlantic, cooked, dry heat",fish_lean,"carrier_EPA_DHA,carrier_EPA_DHA_fish,carrier_VitD,carrier_VitE,vitA_dense",fish_day,fish_cluster,vitA_upper_risk
+172336,"Oil, canola",oil_omega6_la,"carrier_ALA,carrier_LA,carrier_VitE",,oil_cluster,
+172343,"Fish oil, salmon",oil_omega3_lc,"carrier_ALA,carrier_EPA_DHA,carrier_EPA_DHA_oil",,salmon_family,
+172377,"Chicken, broilers or fryers, drumstick, meat only, cooked, stewed",meat_moderate,"carrier_EPA_DHA,vitA_dense",,chicken_family,vitA_upper_risk
+172381,"Chicken, broilers or fryers, leg, meat only, cooked, stewed",meat_moderate,"carrier_EPA_DHA,carrier_LA,vitA_dense",,chicken_family,vitA_upper_risk
+172389,"Chicken, broilers or fryers, thigh, meat only, cooked, stewed",meat_moderate,"carrier_EPA_DHA,carrier_LA,vitA_dense",,chicken_family,vitA_upper_risk
+172409,"Duck, domesticated, meat and skin, cooked, roasted",meat_moderate,"carrier_ALA,carrier_LA,vitA_dense",,meat_cluster,vitA_upper_risk
+172411,"Duck, domesticated, meat only, cooked, roasted",meat_moderate,"carrier_ALA,vitA_dense",,meat_cluster,vitA_upper_risk
+172528,"Lamb, variety meats and by-products, heart, cooked, braised",organ_other,"carrier_ALA,carrier_EPA_DHA",,lamb_family,
+172532,"Lamb, variety meats and by-products, liver, cooked, braised",organ_liver,vitA_dense,liver_day,lamb_family,vitA_upper_risk
+173424,"Egg, whole, cooked, hard-boiled",egg,"carrier_EPA_DHA,carrier_VitD,carrier_VitE,vitA_dense",,egg_family,vitA_upper_risk
+173577,"Fish oil, cod liver",oil_omega3_lc,"carrier_ALA,carrier_EPA_DHA,carrier_EPA_DHA_oil,carrier_VitD,vitA_dense",,oil_cluster,vitA_upper_risk
+173578,"Fish oil, sardine",oil_omega3_lc,"carrier_ALA,carrier_EPA_DHA,carrier_EPA_DHA_oil,carrier_VitD",,sardine_family,
+173613,"Chicken, broilers or fryers, drumstick, meat and skin, cooked, stewed",meat_moderate,"carrier_EPA_DHA,carrier_LA,vitA_dense",,chicken_family,vitA_upper_risk
+173618,"Chicken, broilers or fryers, leg, meat and skin, cooked, stewed",meat_moderate,"carrier_EPA_DHA,carrier_LA,vitA_dense",,chicken_family,vitA_upper_risk
+173626,"Chicken, broilers or fryers, thigh, meat and skin, cooked, stewed",meat_moderate,"carrier_EPA_DHA,carrier_LA,vitA_dense",,chicken_family,vitA_upper_risk
+173719,"Fish, salmon, coho, wild, cooked, dry heat",fish_fatty,"carrier_EPA_DHA,carrier_EPA_DHA_fish,carrier_VitD,carrier_VitE,vitA_dense",fish_day,salmon_family,vitA_upper_risk
+174004,"Beef, loin, tenderloin roast, boneless, separable lean only, trimmed to 0"" fat, all grades, cooked, roasted",meat_lean,carrier_EPA_DHA,,beef_family,
+174032,"Beef, ground, 85% lean meat / 15% fat, patty, cooked, broiled",meat_moderate,carrier_EPA_DHA,,beef_family,
+174233,"Fish, herring, Pacific, cooked, dry heat",fish_fatty,"carrier_EPA_DHA,carrier_EPA_DHA_fish,vitA_dense",fish_day,fish_cluster,vitA_upper_risk
+175117,"Fish, herring, Atlantic, cooked, dry heat",fish_fatty,"carrier_EPA_DHA,carrier_EPA_DHA_fish,carrier_VitD,carrier_VitE,vitA_dense",fish_day,fish_cluster,vitA_upper_risk
+175120,"Fish, mackerel, Atlantic, cooked, dry heat",fish_fatty,"carrier_EPA_DHA,carrier_EPA_DHA_fish,vitA_dense",fish_day,mackerel_family,vitA_upper_risk
+175168,"Fish, salmon, Atlantic, farmed, cooked, dry heat",fish_fatty,"carrier_EPA_DHA,carrier_EPA_DHA_fish,carrier_VitD,vitA_dense",fish_day,salmon_family,vitA_upper_risk
+175178,"Fish, cod, Pacific, cooked",fish_lean,"carrier_EPA_DHA,carrier_EPA_DHA_fish",fish_day,fish_cluster,
+175180,"Crustaceans, shrimp, cooked",fish_lean,"carrier_EPA_DHA,carrier_EPA_DHA_fish",fish_day,fish_cluster,

@@ -1,0 +1,21 @@
+id,source,owner_uid,fdc_id,description,short_name,food_category_id,food_category_label,food_group,is_active,max_g_per_bg_bw,max_pct_kcal,created_at,updated_at
+c06719f9-a981-4baf-bac2-55071565ffc9,built_in,,167702,"Oil, flaxseed, cold pressed",Oil Flaxseed,4,Fats and Oils,FAT_OIL,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+a008cd52-06ee-4962-8dd3-45ea5d2ab397,built_in,,168568,"Carrots, baby, raw",Carrots Baby,11,Vegetables and Vegetable Products,PLANT_ANTIOXIDANT,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+25e4126c-ad5d-4a31-8f6e-d13ff69636d0,built_in,,168626,"Beef, variety meats and by-products, liver, cooked, braised",Beef Liver,13,Beef Products,ORGAN,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+a067fdf6-6e3a-4bee-860e-533c51733a20,built_in,,169192,"Pork, ground, 84% lean / 16% fat, cooked, crumbles",Pork 84% Lean / 16% Fat Crumbles,10,Pork Products,PROTEIN_MEAT,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+61abe6ff-3f77-437b-b481-fa90bbe8ac9d,built_in,,169450,"Beef, variety meats and by-products, kidneys, cooked, simmered",Beef Kidneys,13,Beef Products,ORGAN,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+577773f9-943f-492c-b652-0319d1c78375,built_in,,169704,"Rice, brown, long-grain, cooked (Includes foods for USDA's Food Distribution Program)",Rice Brown Long-Grain,20,Gereal Grains and Pasta,CARB_GRAIN,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+6198532f-8ebb-43f2-895d-f4a56cde10d8,built_in,,170407,"Collards, cooked, boiled, drained, without salt",Collards,11,Vegetables and Vegetable Products,PLANT_ANTIOXIDANT,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+dbdcd936-f310-4fdd-860a-6d151ce66222,built_in,,171025,"Oil, sunflower, linoleic, (approx. 65%)",Oil Sunflower,4,Fats and Oils,FAT_OIL,TRUE,,,2026-02-01T22:55:34.735723,2026-02-01T22:55:34.735723
+a93b56bc-9728-486b-996e-dadc7f6500e8,built_in,,171061,"Chicken, liver, all classes, cooked, simmered",Chicken Liver,5,Poultry Products,ORGAN,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+ba995d24-9d0f-4397-a494-4a128c9c2589,built_in,,171711,"Blueberries, raw",Blueberries,9,Fruits,PLANT_ANTIOXIDANT,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+759605da-7cd2-4c37-9cf0-6d8d80d68095,built_in,,171791,"Beef, ground, 95% lean meat / 5% fat, patty, cooked, broiled",Beef 95% Lean Meat / 5% Fat,13,Beef Products,PROTEIN_MEAT,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+881cdf31-e253-4160-93c3-c26df26f7867,built_in,,171956,"Fish, cod, Atlantic, cooked, dry heat",Cod Atlantic,15,Finfish and Shellfish Products,PROTEIN_FISH,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+e56fee29-4cea-410d-a32f-389a93fb803b,built_in,,173424,"Egg, whole, cooked, hard-boiled",Egg,1,Dairy and Egg Products,PROTEIN_EGG,TRUE,,,2026-02-02T02:28:33.830537,2026-02-02T02:28:33.830537
+08e56ae5-641e-40ed-84f7-57422f35e56c,built_in,,173577,"Fish oil, cod liver",Cod Liver,4,Fats and Oils,FAT_OIL,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+dfe797b3-642e-4721-9e56-6473c50e4905,built_in,,174250,"Mollusks, oyster, Pacific, cooked, moist heat",Oyster Pacific,15,Finfish and Shellfish Products,MINERAL_SHELLFISH,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+abd45421-3d76-4197-b82b-2ed3d6e47bef,built_in,,175168,"Fish, salmon, Atlantic, farmed, cooked, dry heat",Salmon Atlantic,15,Finfish and Shellfish Products,PROTEIN_FISH,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+94d4e033-ea74-48af-a74a-ccc864a6bd60,built_in,,175180,"Crustaceans, shrimp, cooked",Shrimp,15,Finfish and Shellfish Products,PROTEIN_SHELLFISH,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+a9b880cb-873a-4958-9fd4-07ce4c9c80e3,built_in,,746775,"Salt, table, iodized",Table Iodized,21,Supplements Products,SUPPLEMENT,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+62356d64-1fb9-45f8-9610-652ce5dc155b,built_in,,1742558,PSYLLIUM HUSK POWDER,Psyllium Husk Powder,21,Supplements Products,SUPPLEMENT,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119
+9fd3b784-4ff1-40ee-bc68-09308bb97eca,built_in,,2375721,Eggshell Powder,Eggshell Powder,21,Supplements Products,SUPPLEMENT,TRUE,,,2026-01-29T18:52:07.032119,2026-01-29T18:52:07.032119

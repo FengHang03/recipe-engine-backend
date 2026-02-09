@@ -1,0 +1,46 @@
+nutrient_id,name,unit_name,is_key,group_name,display_order
+1003,Protein,G,True,protein_amino,4
+1004,Total lipid (fat),G,True,fat_fatty_acid,17
+1005,"Carbohydrate, by difference",G,True,vitamins_other,3
+1008,Energy,KCAL,True,vitamins_other,1
+1079,"Fiber, total dietary",G,False,vitamins_other,2
+1087,"Calcium, Ca",MG,False,minerals,23
+1088,"Chlorine, Cl",MG,False,minerals,27
+1089,"Iron, Fe",MG,False,minerals,29
+1090,"Magnesium, Mg",MG,False,minerals,28
+1091,"Phosphorus, P",MG,False,minerals,24
+1092,"Potassium, K",MG,False,minerals,25
+1093,"Sodium, Na",MG,False,minerals,26
+1095,"Zinc, Zn",MG,False,minerals,32
+1098,"Copper, Cu",MG,False,minerals,30
+1100,"Iodine, I",UG,False,minerals,33
+1101,"Manganese, Mn",MG,False,minerals,31
+1103,"Selenium, Se",UG,False,minerals,34
+1104,"Vitamin A, IU",IU,False,vitamins_other,35
+1109,Vitamin E (alpha-tocopherol),MG,False,vitamins_other,37
+1110,"Vitamin D (D2 + D3), International Units",IU,False,vitamins_other,36
+1165,Thiamin,MG,False,vitamins_other,38
+1166,Riboflavin,MG,False,vitamins_other,39
+1167,Niacin,MG,False,vitamins_other,41
+1170,Pantothenic acid,MG,False,vitamins_other,40
+1175,Vitamin B-6,MG,False,vitamins_other,42
+1178,Vitamin B-12,UG,False,vitamins_other,44
+1180,"Choline, total",MG,False,vitamins_other,45
+1186,Folic acid,UG,False,vitamins_other,43
+1210,Tryptophan,G,False,protein_amino,15
+1211,Threonine,G,False,protein_amino,14
+1212,Isoleucine,G,False,protein_amino,7
+1213,Leucine,G,False,protein_amino,8
+1214,Lysine,G,False,protein_amino,9
+1215,Methionine,G,False,protein_amino,10
+1216,Cystine,G,False,protein_amino,11
+1217,Phenylalanine,G,False,protein_amino,12
+1218,Tyrosine,G,False,protein_amino,13
+1219,Valine,G,False,protein_amino,16
+1220,Arginine,G,False,protein_amino,5
+1221,Histidine,G,False,protein_amino,6
+1269,PUFA 18:2,G,False,fat_fatty_acid,18
+1271,PUFA 20:4,G,False,fat_fatty_acid,20
+1272,PUFA 22:6 n-3 (DHA),G,False,fat_fatty_acid,21
+1278,PUFA 20:5 n-3 (EPA),G,False,fat_fatty_acid,22
+1404,"PUFA 18:3 n-3 c,c,c (ALA)",G,False,fat_fatty_acid,19

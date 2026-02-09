@@ -1,0 +1,46 @@
+,nutrient_id,name,unit_name,is_key,group_name
+0,1003,Protein,G,True,protein_amino
+1,1220,Arginine,G,False,protein_amino
+2,1221,Histidine,G,False,protein_amino
+3,1212,Isoleucine,G,False,protein_amino
+4,1213,Leucine,G,False,protein_amino
+5,1214,Lysine,G,False,protein_amino
+6,1215,Methionine,G,False,protein_amino
+7,1216,Cystine,G,False,protein_amino
+8,1217,Phenylalanine,G,False,protein_amino
+9,1218,Tyrosine,G,False,protein_amino
+10,1211,Threonine,G,False,protein_amino
+11,1210,Tryptophan,G,False,protein_amino
+12,1219,Valine,G,False,protein_amino
+13,1004,Total lipid (fat),G,True,fat_fatty_acid
+14,1269,PUFA 18:2,G,False,fat_fatty_acid
+15,1404,"PUFA 18:3 n-3 c,c,c (ALA)",G,False,fat_fatty_acid
+16,1271,PUFA 20:4,G,False,fat_fatty_acid
+17,1272,PUFA 22:6 n-3 (DHA),G,False,fat_fatty_acid
+18,1278,PUFA 20:5 n-3 (EPA),G,False,fat_fatty_acid
+19,1087,"Calcium, Ca",MG,False,minerals
+20,1091,"Phosphorus, P",MG,False,minerals
+21,1092,"Potassium, K",MG,False,minerals
+22,1093,"Sodium, Na",MG,False,minerals
+23,1088,"Chlorine, Cl",MG,False,minerals
+24,1090,"Magnesium, Mg",MG,False,minerals
+25,1089,"Iron, Fe",MG,False,minerals
+26,1098,"Copper, Cu",MG,False,minerals
+27,1101,"Manganese, Mn",MG,False,minerals
+28,1095,"Zinc, Zn",MG,False,minerals
+29,1100,"Iodine, I",UG,False,minerals
+30,1103,"Selenium, Se",UG,False,minerals
+31,1008,Energy,KCAL,True,vitamins_other
+32,1079,"Fiber, total dietary",G,False,vitamins_other
+33,1005,"Carbohydrate, by difference",G,True,vitamins_other
+34,1104,"Vitamin A, IU",IU,False,vitamins_other
+35,1110,"Vitamin D (D2 + D3), International Units",IU,False,vitamins_other
+36,1109,Vitamin E (alpha-tocopherol),MG,False,vitamins_other
+37,1165,Thiamin,MG,False,vitamins_other
+38,1166,Riboflavin,MG,False,vitamins_other
+39,1170,Pantothenic acid,MG,False,vitamins_other
+40,1167,Niacin,MG,False,vitamins_other
+41,1175,Vitamin B-6,MG,False,vitamins_other
+42,1186,Folic acid,UG,False,vitamins_other
+43,1178,Vitamin B-12,UG,False,vitamins_other
+44,1180,"Choline, total",MG,False,vitamins_other

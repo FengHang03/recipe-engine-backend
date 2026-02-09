@@ -1,0 +1,138 @@
+fdc_id,description,,,food_category_id,nutrient_id,name,amount,unit_name,food_category_label
+167702,"Oil, flaxseed, cold pressed",167702  油、亚麻籽、冷榨,,4,1003,Protein,0.11,G,fat
+167762,"Strawberries, raw",167762  草莓、生的,,9,1003,Protein,0.67,G,fruit
+167765,"Watermelon, raw",167765  西瓜、生的,,9,1003,Protein,0.61,G,fruit
+168151,"Jujube, raw",168151  枣、生的,,9,1003,Protein,1.2,G,fruit
+168153,"Kiwifruit, green, raw",168153  绿猕猴桃、生的,,9,1003,Protein,1.14,G,fruit
+168177,"Pears, asian, raw",168177  亚洲梨、生的,,9,1003,Protein,0.5,G,fruit
+168394,"Balsam-pear (bitter gourd), pods, cooked, boiled, drained, without salt",168394  芫荽子（苦瓜）的果荚，烹饪后，煮熟，沥干，不加盐,,11,1003,Protein,0.84,G,vegetable
+168395,"Beans, kidney, mature seeds, sprouted, cooked, boiled, drained, without salt",168395  豆类、肾豆、成熟种子、发芽后烹饪、煮熟、沥干、不加盐,,11,1003,Protein,4.83,G,carbohydrate
+168413,"Escarole, cooked, boiled, drained, no salt added",168413  蕨菜（煮熟后沥干，不加盐）,,11,1003,Protein,1.15,G,vegetable
+168430,"Lotus root, cooked, boiled, drained, without salt",168430  莲藕、煮熟后沥干，不加盐,,11,1003,Protein,1.58,G,vegetable
+168433,"Mountain yam, hawaii, cooked, steamed, without salt",168433  大山芋（夏威夷品种），烹饪后蒸制，不加盐,,11,1003,Protein,1.73,G,vegetable
+168449,"Pumpkin, cooked, boiled, drained, without salt",168449  西瓜、煮熟后沥干，不加盐,,11,1003,Protein,0.72,G,carbohydrate
+168463,"Spinach, cooked, boiled, drained, without salt",168463  菠菜、煮熟后沥干，不加盐,,11,1003,Protein,2.97,G,vegetable
+168484,"Sweet potato, cooked, boiled, without skin",168484  红薯、煮熟后不带皮,,11,1003,Protein,1.37,G,carbohydrate
+168486,"Taro, cooked, without salt",168486  竹芋、烹饪后不加盐,,11,1003,Protein,0.52,G,vegetable
+168539,"Corn, sweet, white, cooked, boiled, drained, without salt",168539  糯米、煮熟后沥干，不加盐,,11,1003,Protein,3.34,G,carbohydrate
+168568,"Carrots, baby, raw",168568  胡萝卜、幼苗、生的,,11,1003,Protein,0.64,G,vegetable
+168626,"Beef, variety meats and by-products, liver, cooked, braised",168626  牛肉、各种肉类和副产品、肝脏、烹饪后炖煮,,13,1003,Protein,29.08,G,organ
+168871,"Millet, cooked",168871  大米（用于美国农业部食品分配计划的食物）,,20,1003,Protein,3.51,G,carbohydrate
+168875,"Rice, brown, medium-grain, cooked (Includes foods for USDA's Food Distribution Program)",168875  糙米、中粒、烹饪（包括美国农业部食品分配计划的食物）,,20,1003,Protein,2.32,G,carbohydrate
+168880,"Rice, white, medium-grain, enriched, cooked",168880  无盐强化白米,,20,1003,Protein,2.38,G,carbohydrate
+168882,"Rice, white, short-grain, enriched, cooked",168882  无盐强化短粒白米,,20,1003,Protein,2.36,G,carbohydrate
+168917,"Quinoa, cooked",168917  香米、煮熟后沥干，不加盐,,20,1003,Protein,4.4,G,carbohydrate
+169092,"Melons, cantaloupe, raw",169092  西瓜、哈密瓜、生的,,9,1003,Protein,0.84,G,fruit
+169097,"Oranges, raw, all commercial varieties",169097  橙子、生的，所有商业品种,,9,1003,Protein,0.94,G,fruit
+169118,"Pears, raw",169118  生梨,,9,1003,Protein,0.36,G,fruit
+169124,"Pineapple, raw, all varieties",169124  熟菠萝，各种品种,,9,1003,Protein,0.54,G,fruit
+169211,"Bamboo shoots, cooked, boiled, drained, without salt",169211  烹饪过的竹笋，煮熟后去皮并沥干，不加盐,,11,1003,Protein,1.53,G,vegetable
+169225,"Cucumber, peeled, raw",169225  西瓜皮去皮后生吃,,11,1003,Protein,0.59,G,vegetable
+169283,"Soybeans, green, cooked, boiled, drained, without salt",169283  绿豆，煮熟后去皮并沥干，不加盐,,11,1003,Protein,12.35,G,vegetable
+169292,"Squash, summer, zucchini, includes skin, cooked, boiled, drained, without salt",169292  夏季南瓜，包括外皮，煮熟后去皮并沥干，不加盐,,11,1003,Protein,1.14,G,vegetable
+169302,"Water convolvulus, cooked, boiled, drained, without salt",169302  水蔓藤，煮熟后去皮并沥干，不加盐,,11,1003,Protein,2.08,G,vegetable
+169390,"Cauliflower, green, cooked, no salt added",169390  绿花椰菜，煮熟后不加盐,,11,1003,Protein,3.04,G,vegetable
+169414,"Seeds, flaxseed",169414  花生（各种肉类和副产品），心脏部分，煮熟后慢炖,,12,1003,Protein,18.29,G,fat
+169448,"Beef, variety meats and by-products, heart, cooked, simmered",,,13,1003,Protein,28.48,G,organ
+169704,"Rice, brown, long-grain, cooked (Includes foods for USDA's Food Distribution Program)",169704  糙米，长粒，煮熟（包括美国农业部食品分配计划所需的食物）,,20,1003,Protein,2.74,G,carbohydrate
+169711,"Rice, white, glutinous, unenriched, cooked",169711  白米，糯米，未强化，煮熟,,20,1003,Protein,2.02,G,carbohydrate
+169902,"Quail, cooked, total edible",169902  鹅鹑，煮熟后可食用部分,,5,1003,Protein,25.1,G,protein
+169903,"Pheasant, cooked, total edible",169903  鹤鹑（包括小鸡）,,5,1003,Protein,32.4,G,protein
+169905,"Dove, cooked (includes squab)",169905  鸽子，煮熟后可食用部分（包括小鸡）,,5,1003,Protein,23.9,G,protein
+169910,"Mangos, raw",169910  芒果，生吃,,9,1003,Protein,0.82,G,fruit
+169911,"Melons, honeydew, raw",169911  蜂蜜瓜，生吃,,9,1003,Protein,0.54,G,fruit
+169914,"Nectarines, raw",169914  桑葚，生吃,,9,1003,Protein,1.06,G,fruit
+169926,"Papayas, raw",169926  芒果，生吃,,9,1003,Protein,0.47,G,fruit
+169928,"Peaches, yellow, raw",169928  黄色桃子，生吃,,9,1003,Protein,0.91,G,fruit
+169949,"Plums, raw",169949  樱桃，生吃,,9,1003,Protein,0.7,G,fruit
+169967,"Broccoli, cooked, boiled, drained, without salt",169967  樱桃李，生吃,,11,1003,Protein,2.38,G,vegetable
+169969,"Broccoli, frozen, chopped, cooked, boiled, drained, without salt",169969  樱桃（冷冻）切碎后煮熟后去皮并沥干，不加盐,,11,1003,Protein,3.1,G,vegetable
+169976,"Cabbage, cooked, boiled, drained, without salt",169976  菠菜，煮熟后去皮并沥干，不加盐,,11,1003,Protein,1.27,G,vegetable
+169989,"Celery, cooked, boiled, drained, without salt",169989  芹菜，煮熟后去皮并沥干，不加盐,,11,1003,Protein,0.83,G,vegetable
+169999,"Corn, sweet, yellow, cooked, boiled, drained, without salt",169999  糖甜玉米，煮熟后去皮并沥干，不加盐,,11,1003,Protein,3.41,G,carbohydrate
+170072,"Yam, cooked, boiled, drained, or baked, without salt",170072  煮熟的燕麦，经过煮、蒸、沥干或烘烤处理，不加盐,,11,1003,Protein,1.49,G,carbohydrate
+170158,"Nuts, almonds, dry roasted, without salt added",170158 杏仁，干烤的，不加盐,,12,1003,Protein,20.96,G,fat
+170183,"Nuts, pecans, dry roasted, without salt added",170183 核桃，干烤的，不加盐,,12,1003,Protein,9.5,G,fat
+170285,"Barley, pearled, cooked",170285 糙米，煮过的,,20,1003,Protein,2.26,G,carbohydrate
+170394,"Carrots, cooked, boiled, drained, without salt",170394 胡萝卜，煮过的，沥干，不加盐,,11,1003,Protein,0.76,G,vegetable
+170397,"Cauliflower, cooked, boiled, drained, without salt",170397 菜花，煮过的，沥干，不加盐,,11,1003,Protein,1.84,G,vegetable
+170407,"Collards, cooked, boiled, drained, without salt",170407 卷心菜，煮过的，沥干，不加盐,,11,1003,Protein,2.71,G,vegetable
+170420,"Peas, green, cooked, boiled, drained, without salt",170420 绿豌豆，煮过的，沥干，不加盐,,11,1003,Protein,5.36,G,carbohydrate
+170438,"Potatoes, boiled, cooked in skin, flesh, without salt",170438 土豆，带皮煮过的，肉质部分，不加盐,,11,1003,Protein,1.87,G,vegetable
+170440,"Potatoes, boiled, cooked without skin, flesh, without salt",170440 土豆，去皮煮过的，肉质部分，不加盐,,11,1003,Protein,1.71,G,vegetable
+170475,"Waxgourd, (chinese preserving melon), cooked, boiled, drained, without salt",170475 蜜瓜（中国腌制瓜），煮过的，沥干，不加盐,,11,1003,Protein,0.4,G,vegetable
+170490,"Squash, winter, all varieties, cooked, baked, without salt",170490 冬瓜，各种品种，煮过的，烘烤的，不加盐,,11,1003,Protein,0.89,G,carbohydrate
+170557,"Seeds, pumpkin and squash seed kernels, roasted, without salt",170557 西瓜籽和南瓜籽仁，烤制的，不加盐,,12,1003,Protein,29.84,G,fat
+170563,"Seeds, sunflower seed kernels, dry roasted, without salt",170563 葵花籽仁，干烤的，不加盐,,12,1003,Protein,19.33,G,fat
+170571,"Nuts, cashew nuts, dry roasted, without salt added",170571 核桃，腰果，干烤的，不加盐,,12,1003,Protein,15.31,G,fat
+171016,"Oil, sesame, salad or cooking",171016 油，芝麻，用于沙拉或烹饪,,4,1003,Protein,0,G,fat
+171030,"Oil, walnut",171030 榛子油,,4,1003,Protein,0,G,fat
+171059,"Chicken, heart, all classes, cooked, simmered",171059 鸡心，各类，煮熟，慢炖,,5,1003,Protein,26.41,G,organ
+171061,"Chicken, liver, all classes, cooked, simmered",171061 鸡肝，各类，煮熟，慢炖,,5,1003,Protein,24.46,G,organ
+171117,"Chicken, ground, crumbles, cooked, pan-browned",171117 鸡肉，绞碎的，碎块状，煮熟，平底锅煎制,,5,1003,Protein,23.28,G,protein
+171140,"Chicken, broiler or fryers, breast, skinless, boneless, meat only, cooked, braised",171140 鸡肉，烤鸡或炸鸡，胸脯肉，去皮、去骨，只含肉质部分，煮熟，炖煮,,5,1003,Protein,32.06,G,protein
+171412,"Oil, coconut",171412 油、椰子,,4,1003,Protein,0,G,fat
+171413,"Oil, olive, salad or cooking",171413 油、橄榄油、沙拉用或烹饪用,,4,1003,Protein,0,G,fat
+171429,"Oil, sheanut",171429 油、花生,,4,1003,Protein,0,G,fat
+171457,"Chicken, gizzard, all classes, cooked, simmered",171457 鸡肉、鸡内脏、所有种类，烹饪后，慢炖,,5,1003,Protein,30.39,G,organ
+171483,"Turkey, all classes, gizzard, cooked, simmered",171483 鹅肉、所有种类，鸡内脏，烹饪后，慢炖,,5,1003,Protein,26.45,G,organ
+171485,"Turkey, all classes, heart, cooked, simmered",171485 鹅肉、所有种类，心脏，烹饪后，慢炖,,5,1003,Protein,24.88,G,organ
+171487,"Turkey, all classes, liver, cooked, simmered",171487 鹅肉、所有种类，肝脏，烹饪后，慢炖,,5,1003,Protein,27,G,organ
+171492,"Turkey, all classes, breast, meat and skin, cooked, roasted",171492 鹅肉、所有种类，胸脯肉，肉和皮，烹饪后，烤制,,5,1003,Protein,28.71,G,protein
+171494,"Turkey, all classes, leg, meat and skin, cooked, roasted",171494 鹅肉、所有种类，腿部，肉和皮，烹饪后，烤制,,5,1003,Protein,27.87,G,protein
+171511,"Duck, young duckling, domesticated, White Pekin, breast, meat only, boneless, cooked without skin, broiled",171511 鹅、小鹅、家养、白番鸭、胸脯肉，只含肉，无骨，不带皮，烤制,,5,1003,Protein,27.6,G,protein
+171688,"Apples, raw, with skin (Includes foods for USDA's Food Distribution Program)",171688 苹果、生的，带皮（包括美国农业部食品分配计划的食物）,,9,1003,Protein,0.26,G,fruit
+171711,"Blueberries, raw",171711 蓝莓、生的,,9,1003,Protein,0.74,G,fruit
+171722,"Cranberries, raw",171722 无花果、生的,,9,1003,Protein,0.46,G,fruit
+171791,"Beef, ground, 95% lean meat / 5% fat, patty, cooked, broiled",171791 牛肉、绞碎的，95%瘦肉/5%脂肪，饼状，烹饪后，烤制,,13,1003,Protein,26.29,G,protein
+171975,"Mollusks, clam, mixed species, cooked, moist heat",171975 海生软体动物、蛤蜊、混合种类，烹饪后，湿热,,15,1003,Protein,25.55,G,protein
+171989,"Fish, bass, freshwater, mixed species, cooked, dry heat",171989 鱼、鲈鱼、淡水鱼、混合种类，烹饪后，干热,,15,1003,Protein,24.18,G,protein
+171994,"Fish, mackerel, Pacific and jack, mixed species, cooked, dry heat",171994 鱼、鲭鱼、太平洋和梭子鱼、混合种类，烹饪后，干热,,15,1003,Protein,25.73,G,protein
+172004,"Fish, trout, mixed species, cooked, dry heat",172004 鱼、鳟鱼、混合种类，烹饪后，干热,,15,1003,Protein,26.63,G,protein
+172336,"Oil, canola",172336 油、菜籽油,,4,1003,Protein,0,G,fat
+172343,"Fish oil, salmon",172343 鱼油、鲑鱼,,4,1003,Protein,0,G,fat
+172344,"Butter, light, stick, without salt",172344 黄油、轻质、棒状、不含盐,,4,1003,Protein,3.3,G,fat
+172429,"Peas, split, mature seeds, cooked, boiled, without salt",172429 豌豆、裂开的、成熟种子，烹饪后，煮熟，不加盐,,16,1003,Protein,8.34,G,carbohydrate
+172528,"Lamb, variety meats and by-products, heart, cooked, braised",172528 羊肉、多种肉类和副产品、心脏，烹饪后，炖煮,,17,1003,Protein,24.97,G,organ
+172532,"Lamb, variety meats and by-products, liver, cooked, braised",172532 羊肉、各种肉类及其副产品、肝脏（烹饪后）、炖煮,,17,1003,Protein,30.57,G,organ
+172544,"Lamb, ground, cooked, broiled",172544 羊肉、绞碎的、烹饪后、烤制,,17,1003,Protein,24.75,G,protein
+172603,"Game meat, deer, ground, cooked, pan-broiled",172603 野味肉、鹿肉、绞碎的、烹饪后、平底锅烤制,,17,1003,Protein,26.45,G,protein
+172616,"Lamb, New Zealand, imported, ground lamb, cooked, braised",172616 新西兰进口羊肉、绞碎的、烹饪后、炖煮,,17,1003,Protein,22.6,G,protein
+172853,"Chicken, broilers or fryers, dark meat, thigh, meat only, cooked, braised",172853 鸡肉，育肥鸡或育雏鸡，深色肉，大腿，只含肉部分，烹饪，炖煮,,5,1003,Protein,24.55,G,protein
+173081,"Beef, New Zealand, imported, variety meats and by-products, heart, cooked, boiled",173081 新西兰进口的牛肉，多种肉类和副产品，心脏，烹饪，煮制,,13,1003,Protein,31.29,G,organ
+173263,"Rice, brown, parboiled, cooked, UNCLE BENS",173263 糙米，煮熟的，半煮熟的，烹饪过的，叔叔本斯牌,,20,1003,Protein,3.09,G,carbohydrate
+173578,"Fish oil, sardine",鱼油、沙丁鱼,,4,1003,Protein,0,G,fat
+173679,"Fish, perch, mixed species, cooked, dry heat",鱼、鲈鱼、混合种类、烹制、干热烹饪,,15,1003,Protein,24.86,G,protein
+173707,"Fish, tuna, fresh, bluefin, cooked, dry heat",鱼、金枪鱼、新鲜、蓝鳍、烹制、干热烹饪,,15,1003,Protein,29.91,G,protein
+173728,"Beans, adzuki, mature seeds, cooked, boiled, without salt",豆类、红小豆、成熟种子、烹制、煮、不加盐,,16,1003,Protein,7.52,G,carbohydrate
+173735,"Beans, black, mature seeds, cooked, boiled, without salt",豆类、黑豆、成熟种子、烹制、煮、不加盐,,16,1003,Protein,8.86,G,carbohydrate
+173740,"Beans, kidney, all types, mature seeds, cooked, boiled, without salt",豆类、肾豆、所有种类、成熟种子、烹制、煮、不加盐,,16,1003,Protein,8.67,G,carbohydrate
+173753,"Broadbeans (fava beans), mature seeds, cooked, boiled, without salt",蚕豆（蚕豆）、成熟种子、烹制、煮、不加盐,,16,1003,Protein,7.6,G,carbohydrate
+173757,"Chickpeas (garbanzo beans, bengal gram), mature seeds, cooked, boiled, without salt",鹰嘴豆（鹰嘴豆、孟加拉豆）、成熟种子、烹制、煮、不加盐,,16,1003,Protein,8.86,G,carbohydrate
+173844,"Game meat, antelope, cooked, roasted",野味肉、羚羊、烹制、烤制,,17,1003,Protein,29.45,G,protein
+173847,"Bison, ground, grass-fed, cooked",野牛、绞碎、草饲、烹制,,17,1003,Protein,25.45,G,protein
+173946,"Blackberries, raw",黑莓、生的,,9,1003,Protein,1.39,G,fruit
+174032,"Beef, ground, 85% lean meat / 15% fat, patty, cooked, broiled",牛肉、绞碎、85%瘦肉/15%脂肪、肉饼、烹制、烤制,,13,1003,Protein,25.93,G,protein
+174201,"Fish, halibut, Atlantic and Pacific, cooked, dry heat",鱼、大西洋和太平洋的比目鱼、烹制、干热烹饪,,15,1003,Protein,22.54,G,protein
+174217,"Mollusks, mussel, blue, cooked, moist heat",软体动物、牡蛎、蓝色的、烹制、湿热烹饪,,15,1003,Protein,23.8,G,protein
+174235,"Fish, lingcod, cooked, dry heat",鱼、领鳕鱼、烹制、干热烹饪,,15,1003,Protein,22.64,G,protein
+174238,"Fish, pout, ocean, cooked, dry heat",鱼、鳕鱼、海洋的、烹制、干热烹饪,,15,1003,Protein,21.33,G,protein
+174246,"Fish, whitefish, mixed species, cooked, dry heat",白鱼、混合种类、烹制、干热烹饪,,15,1003,Protein,24.47,G,protein
+174257,"Mung beans, mature seeds, cooked, boiled, without salt",绿豆（绿豆）、成熟种子、烹制、煮、不加盐,,16,1003,Protein,7.02,G,carbohydrate
+174346,"Game meat, rabbit, domesticated, composite of cuts, cooked, stewed",野味肉、兔子、家养的、各种部位的组合、烹制、炖煮,,17,1003,Protein,30.38,G,protein
+174400,"Lamb, Australian, imported, fresh, composite of trimmed retail cuts, separable lean only, trimmed to 1/8"" fat, cooked",羊羔肉、澳大利亚的、进口的、新鲜的、经过修剪的零售部位的组合、只分离瘦肉、去除脂肪至 1/8 英寸、烹制,,17,1003,Protein,26.71,G,protein
+174422,"Game meat, bison, ground, cooked, pan-broiled",野味肉、麋鹿、绞碎、烹制、平底锅烤制,,17,1003,Protein,23.77,G,protein
+174426,"Game meat, elk, ground, cooked, pan-broiled",野味肉、驼鹿、绞碎、烹制、平底锅烤制,,17,1003,Protein,26.64,G,protein
+174494,"Turkey, ground, 85% lean, 15% fat, pan-broiled crumbles",火鸡、绞碎、85%瘦肉/15%脂肪、平底锅烤制,,5,1003,Protein,25.11,G,protein
+174879,"Veal, ground, cooked, pan-fried",碎块小牛肉，绞碎，烹制，平底锅煎制,,17,1003,Protein,25.83,G,protein
+175085,"Game meat, deer, cooked, roasted",野味肉，鹿肉，烹制，烤制,,17,1003,Protein,30.21,G,protein
+175137,"Fish, salmon, coho, wild, cooked, moist heat",鱼，鲑鱼，大西洋鲑鱼，野生，烹制，蒸制（湿热烹饪）,,15,1003,Protein,27.36,G,protein
+175168,"Fish, salmon, Atlantic, farmed, cooked, dry heat",鱼，鲑鱼，大西洋鲑鱼，养殖，烹制，烤制（干热烹饪）,,15,1003,Protein,22.1,G,protein
+175177,"Fish, tilapia, cooked, dry heat",鱼，罗非鱼，烹制，干热烹饪,,15,1003,Protein,26.15,G,protein
+175178,"Fish, cod, Pacific, cooked",鱼，鳕鱼，太平洋鳕鱼，烹制,,15,1003,Protein,20.42,G,protein
+175180,"Crustaceans, shrimp, cooked",甲壳类动物，虾，烹制,,15,1003,Protein,23.98,G,protein
+175194,"Beans, kidney, red, mature seeds, cooked, boiled, without salt",豆类，肾豆，红色成熟种子，烹制，水煮，不加盐,,16,1003,Protein,8.67,G,carbohydrate
+175211,"Hyacinth beans, mature seeds, cooked, boiled, without salt",风信子豆，成熟种子，烹制，水煮，不加盐,,16,1003,Protein,8.14,G,carbohydrate
+175265,"Veal, composite of trimmed retail cuts, separable lean only, cooked",小牛肉，经过修剪的零售部位混合，仅分离出瘦肉，烹制,,17,1003,Protein,31.9,G,protein
+175298,"Game meat, boar, wild, cooked, roasted",野味肉，野猪，野生，烹制，烤制,,17,1003,Protein,28.3,G,protein
+175304,"Game meat, goat, cooked, roasted",野味肉，山羊，烹制，烤制,,17,1003,Protein,27.1,G,protein

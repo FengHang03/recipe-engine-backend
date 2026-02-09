@@ -1,0 +1,21 @@
+fdc_id,description,food_category_id,food_group,food_subgroup
+167702,"Oil, flaxseed, cold pressed",4,FAT_OIL,oil_other
+168568,"Carrots, baby, raw",11,PLANT_ANTIOXIDANT,plant_orange
+168626,"Beef, variety meats and by-products, liver, cooked, braised",13,ORGAN,organ_liver
+169192,"Pork, ground, 84% lean / 16% fat, cooked, crumbles",10,PROTEIN_MEAT,meat_fat
+169450,"Beef, variety meats and by-products, kidneys, cooked, simmered",13,ORGAN,organ_secreting
+169704,"Rice, brown, long-grain, cooked (Includes foods for USDA's Food Distribution Program)",20,CARB_GRAIN,carb_grain
+170407,"Collards, cooked, boiled, drained, without salt",11,PLANT_ANTIOXIDANT,plant_green
+171025,"Oil, sunflower, linoleic, (approx. 65%)",4,FAT_OIL,oil_omega6_la
+171061,"Chicken, liver, all classes, cooked, simmered",5,ORGAN,organ_liver
+171711,"Blueberries, raw",9,PLANT_ANTIOXIDANT,plant_blue
+171791,"Beef, ground, 95% lean meat / 5% fat, patty, cooked, broiled",13,PROTEIN_MEAT,meat_lean
+171956,"Fish, cod, Atlantic, cooked, dry heat",15,PROTEIN_FISH,fish_lean
+173424,"Egg, whole, cooked, hard-boiled",1,PROTEIN_EGG,egg
+173577,"Fish oil, cod liver",4,FAT_OIL,oil_omega3_lc
+174250,"Mollusks, oyster, Pacific, cooked, moist heat",15,MINERAL_SHELLFISH,mineral_shellfish
+175168,"Fish, salmon, Atlantic, farmed, cooked, dry heat",15,PROTEIN_FISH,fish_oily
+175180,"Crustaceans, shrimp, cooked",15,PROTEIN_SHELLFISH,protein_shellfish
+746775,"Salt, table, iodized",21,SUPPLEMENT,supplement_other
+1742558,PSYLLIUM HUSK POWDER,21,SUPPLEMENT,supplement_other
+2375721,Eggshell Powder,21,SUPPLEMENT,supplement_other
