@@ -18,6 +18,7 @@ from ortools.linear_solver import pywraplp
 from backend.service.common.utils import (
     UnitConverter
 )
+from backend.service.database.data_loader import ingredients
 from .l2_data_models import (
     PetProfile, Ingredient, RecipeCombination, L2Input,
     OptimizedWeight, NutrientAnalysis, OptimizationResult,
@@ -277,7 +278,8 @@ class L2Optimizer:
         )
         
         # ===== 3. 槽位约束 (硬上限) =====
-        self._add_slot_constraints(ingredients)
+        comb_ingredients = l2_input.combination.ingredients
+        self._add_slot_constraints(comb_ingredients)
         
         # ===== 4. 风险标签约束 =====
         self._add_risk_tag_constraints(ingredients)
@@ -455,27 +457,45 @@ class L2Optimizer:
             # 原理: Ca / P <= max  --->  Ca <= max * P
             self.solver.Add(total_ca <= max_ratio * total_p)
     
-    def _add_slot_constraints(self, ingredients: List[Ingredient]):
-        """添加槽位约束 (硬上限)"""
-        # 按槽位分组
-        slot_weights = defaultdict(lambda: 0)
-        
-        for ing in ingredients:
-            weight_var = self.vars[ing.ingredient_id]
-            slot_weights[ing.slot] += weight_var
-        
-        # 添加约束
-        for slot, weight_sum in slot_weights.items():
-            constraint = get_slot_constraint(slot)
-            if not constraint:
-                continue
+    def _add_slot_constraints(self, comb_ingredients: Dict[str, List[Ingredient]]):
+            """添加槽位约束 (硬上限)"""
             
-            # 硬最大值
-            self.solver.Add(weight_sum <= constraint.max_ratio * self.total_weight_var)
-            
-            # 硬最小值 (如果设置了)
-            if constraint.min_ratio > 0:
-                self.solver.Add(weight_sum >= constraint.min_ratio * self.total_weight_var)
+            # ✅ 修改点 1: 直接遍历字典的 items()
+            # key 是 slot_name (槽位名), value 是 ingredients (该槽位下的食材列表)
+            for slot_name, ingredients_in_slot in comb_ingredients.items():
+                
+                # 1. 收集当前槽位下所有食材的变量
+                current_slot_vars = []
+                for ing in ingredients_in_slot:
+                    # 确保该食材在优化变量中有定义 (防御性检查)
+                    if ing.ingredient_id in self.vars:
+                        current_slot_vars.append(self.vars[ing.ingredient_id])
+                
+                # 如果该槽位没有对应的变量（可能被过滤掉了），跳过
+                if not current_slot_vars:
+                    continue
+
+                # 2. 计算该槽位的总重量 (Sum Expression)
+                slot_weight_sum = self.solver.Sum(current_slot_vars)
+
+                # 3. 获取约束配置
+                # 注意：这里直接用 loop 中的 slot_name
+                constraint = get_slot_constraint(slot_name)
+                if not constraint:
+                    continue
+                
+                # 4. 添加约束
+                # 硬最大值: Slot_Weight <= Max% * Total_Weight
+                if constraint.max_ratio is not None:
+                    self.solver.Add(
+                        slot_weight_sum <= constraint.max_ratio * self.total_weight_var
+                    )
+                
+                # 硬最小值: Slot_Weight >= Min% * Total_Weight
+                if constraint.min_ratio is not None and constraint.min_ratio > 0:
+                    self.solver.Add(
+                        slot_weight_sum >= constraint.min_ratio * self.total_weight_var
+                    )
     
     def _add_risk_tag_constraints(self, ingredients: List[Ingredient]):
         """添加风险标签约束"""
