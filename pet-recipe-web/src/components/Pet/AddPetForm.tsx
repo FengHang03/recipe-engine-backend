@@ -1,457 +1,394 @@
 // src/components/Pet/AddPetForm.tsx
-import React, { useState } from 'react';
+// 修改点：handleGenerateRecipe 去掉 createPet，直接构建临时 Pet 对象传给 recipeGen.generate
+
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Save, 
-  Loader, 
-  AlertCircle,
-  Calendar,
-  Weight,
-  Activity,
-  Heart
+import {
+  Save, Loader, AlertCircle,
+  Calendar, Weight, Activity, Heart, Zap, ChefHat,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { calculateDailyEnergy, createPet } from '../../lib/api';
-import type {
-    PetFormData,
-    EnergyCalculationRequest,
-} from '../../types/pet';
+import { useRecipeGeneration } from '../../hooks/useRecipeGeneration';
+import AppHeader from '../ui/AppHeader';
+import type { PetFormData, EnergyCalculationRequest, Pet } from '../../types/pet';
 import {
-  Species,
-  ActivityLevel,
-  ReproductiveStatus,
-  ReproState,
-  SizeClass,
-  LifeStage,
-  PhysiologicalStatus,
+  Species, ActivityLevel, ReproductiveStatus,
+  ReproState, SizeClass, LifeStage,
 } from '../../types/pet';
+
+// ── 默认值 ────────────────────────────────────────────────────
+const DEFAULT_FORM: PetFormData = {
+  name:                'Dog',
+  species:             Species.DOG,
+  breed:               '',
+  size_class:          SizeClass.MEDIUM,
+  birth_date:          '',
+  age_months:          12,
+  weight_kg:           20,
+  activity_level:      ActivityLevel.MODERATE,
+  reproductive_status: ReproductiveStatus.INTACT,
+  repro_state:         ReproState.NONE,
+  lactation_week:      4,
+  nursing_count:       1,
+  health_conditions:   [],
+  allergies:           [],
+};
+
+// ── LifeStage 推算 ─────────────────────────────────────────────
+const inferLifeStage = (f: PetFormData): LifeStage => {
+  const months = f.age_months ?? 12;
+  const sc = f.size_class ?? SizeClass.MEDIUM;
+  const adultAt:  Record<SizeClass, number> = { toy: 10, small: 12, medium: 12, large: 15, giant: 18 };
+  const seniorAt: Record<SizeClass, number> = { toy: 120, small: 120, medium: 96, large: 84, giant: 72 };
+  if (months < adultAt[sc])  return LifeStage.PUPPY;
+  if (months >= seniorAt[sc]) return LifeStage.SENIOR;
+  return LifeStage.ADULT;
+};
+
+// ── senior_month 推算 ──────────────────────────────────────────
+const inferSeniorMonth = (f: PetFormData): number => {
+  const seniorAt: Record<SizeClass, number> = { toy: 120, small: 120, medium: 96, large: 84, giant: 72 };
+  return seniorAt[f.size_class ?? SizeClass.MEDIUM];
+};
+
+// ============================================================
+// 组件
+// ============================================================
 
 const AddPetForm: React.FC = () => {
-  const { currentUser, getAuthToken } = useAuth();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const recipeGen = useRecipeGeneration();
 
-  const [formData, setFormData] = useState<PetFormData>({
-    name: '',
-    species: Species.DOG,
-    breed: '',
-    size_class: SizeClass.MEDIUM,
-    birth_date: '',
-    age_months: 12,
-    weight_kg: 10,
-    activity_level: ActivityLevel.MODERATE_ACTIVE,
-    reproductive_status: ReproductiveStatus.NEUTERED,
-    repro_state: ReproState.NONE,
-    lactation_week: 4,
-    nursing_count: 1,
-    health_conditions: [],
-    allergies: []
-  });
-
+  const [formData, setFormData]                 = useState<PetFormData>(DEFAULT_FORM);
   const [calculatedEnergy, setCalculatedEnergy] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [energyLoading, setEnergyLoading]       = useState(false);
+  const [energyError, setEnergyError]           = useState('');
+  const [energyWarnings, setEnergyWarnings]     = useState<string[]>([]);
+  const [saving, setSaving]                     = useState(false);
+  const [formError, setFormError]               = useState('');
+  const [success, setSuccess]                   = useState(false);
 
-  // 根据体型和物种计算生命阶段
-  const calculateLifeStage = (): LifeStage => {
-    const { species, age_months, size_class } = formData;
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    if (species === Species.CAT) {
-      if (age_months! < 12) return LifeStage.KITTEN;
-      if (age_months! >= 84) return LifeStage.SENIOR; // 7 years
-      return LifeStage.ADULT;
-    }
-
-    // Dog
-    if (!size_class) return LifeStage.ADULT;
-
-    const adultMonths: Record<SizeClass, number> = {
-      [SizeClass.TOY]: 10,
-      [SizeClass.SMALL]: 12,
-      [SizeClass.MEDIUM]: 12,
-      [SizeClass.LARGE]: 15,
-      [SizeClass.GIANT]: 18
-    };
-
-    const seniorMonths: Record<SizeClass, number> = {
-      [SizeClass.TOY]: 120,
-      [SizeClass.SMALL]: 120,
-      [SizeClass.MEDIUM]: 96,
-      [SizeClass.LARGE]: 84,
-      [SizeClass.GIANT]: 72
-    };
-
-    if (age_months! < adultMonths[size_class]) return LifeStage.PUPPY;
-    if (age_months! >= seniorMonths[size_class]) return LifeStage.SENIOR;
-    return LifeStage.ADULT;
-  };
-
-  // 计算高级月龄（用于能量计算）
-  const calculateSeniorMonth = (): number => {
-    const { species, size_class } = formData;
-
-    if (species === Species.CAT) return 84; // 7 years
-
-    if (!size_class) return 84;
-
-    const seniorMonths: Record<SizeClass, number> = {
-      [SizeClass.TOY]: 120,
-      [SizeClass.SMALL]: 120,
-      [SizeClass.MEDIUM]: 96,
-      [SizeClass.LARGE]: 84,
-      [SizeClass.GIANT]: 72
-    };
-
-    return seniorMonths[size_class];
-  };
-
-  // 将 ReproductiveStatus + ReproState 转换为 PhysiologicalStatus
-  const getPhysiologicalStatus = (): PhysiologicalStatus => {
-    if (formData.repro_state === ReproState.PREGNANT) {
-      return PhysiologicalStatus.PREGNANT;
-    }
-    if (formData.repro_state === ReproState.LACTATING) {
-      return PhysiologicalStatus.LACTATING;
-    }
-    if (formData.reproductive_status === ReproductiveStatus.NEUTERED) {
-      return PhysiologicalStatus.NEUTERED;
-    }
-    return PhysiologicalStatus.INTACT;
-  };
-
-  // 计算能量需求
-  const handleCalculateEnergy = async () => {
-    setError('');
-    setLoading(true);
-
-    try {
-      const request: EnergyCalculationRequest = {
-        weight_kg: formData.weight_kg,
-        species: formData.species,
-        age_months: formData.age_months || 12,
-        activity_level: formData.activity_level,
-        physiological_status: getPhysiologicalStatus(),
-        breed: formData.breed || undefined,
-        lactation_week: formData.lactation_week,
-        nursing_count: formData.nursing_count,
-        senior_month: calculateSeniorMonth()
-      };
-
-      const result = await calculateDailyEnergy(request);
-      setCalculatedEnergy(result.daily_energy_kcal);
-      
-      // 显示警告信息
-      if (result.warnings && result.warnings.length > 0) {
-        console.warn('Energy calculation warnings:', result.warnings);
-      }
-    } catch (err: any) {
-      console.error('Energy calculation error:', err);
-      setError('Failed to calculate energy requirement: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 提交表单
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    if (!currentUser) {
-      setError('You must be logged in to add a pet');
-      setLoading(false);
+  // ----------------------------------------------------------
+  // 能量自动计算：直接内联在 useEffect，避免 useCallback 依赖链问题
+  // 页面挂载 + 任意字段变化 → debounce 600ms → 发请求
+  // ----------------------------------------------------------
+  useEffect(() => {
+    if (!formData.name.trim() || formData.weight_kg <= 0 || (formData.age_months ?? 0) <= 0) {
       return;
     }
 
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error('Failed to get authentication token');
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      setEnergyLoading(true);
+      setEnergyError('');
+      setEnergyWarnings([]);
+
+      try {
+        const req: EnergyCalculationRequest = {
+          weight_kg:           formData.weight_kg,
+          species:             Species.DOG,
+          age_months:          formData.age_months ?? 12,
+          activity_level:      formData.activity_level,
+          reproductive_status: formData.reproductive_status,
+          repro_state:         formData.repro_state,
+          breed:               formData.breed || undefined,
+          lactation_week:      formData.lactation_week,
+          nursing_count:       formData.nursing_count,
+          senior_month:        inferSeniorMonth(formData),
+        };
+
+        const result = await calculateDailyEnergy(req);
+        setCalculatedEnergy(result.daily_energy_kcal);
+        if (result.warnings?.length > 0) setEnergyWarnings(result.warnings);
+      } catch (err: any) {
+        setEnergyError('Energy calculation failed: ' + err.message);
+        setCalculatedEnergy(null);
+      } finally {
+        setEnergyLoading(false);
       }
+    }, 600);
 
-      // 构建宠物数据
-      const petData = {
-        owner_uid: currentUser.uid,
-        name: formData.name,
-        species: formData.species,
-        breed: formData.breed || undefined,
-        size_class: formData.size_class,
-        birth_date: formData.birth_date || undefined,
-        age_months: formData.age_months,
-        weight_kg: formData.weight_kg,
-        activity_level: formData.activity_level,
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [formData]);
+
+  const update = (patch: Partial<PetFormData>) =>
+    setFormData(prev => ({ ...prev, ...patch }));
+
+  // ----------------------------------------------------------
+  // Save Pet（保存到数据库，流程不变）
+  // ----------------------------------------------------------
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) { setFormError('You must be logged in'); return; }
+    if (!calculatedEnergy) { setFormError('Please wait for energy calculation'); return; }
+
+    setSaving(true);
+    setFormError('');
+    try {
+      await createPet({
+        owner_uid:           currentUser.uid,
+        name:                formData.name,
+        species:             Species.DOG,
+        breed:               formData.breed || undefined,
+        size_class:          formData.size_class,
+        birth_date:          formData.birth_date || undefined,
+        age_months:          formData.age_months,
+        weight_kg:           formData.weight_kg,
+        activity_level:      formData.activity_level,
         reproductive_status: formData.reproductive_status,
-        repro_state: formData.repro_state,
-        life_stage: calculateLifeStage(),
-        lactation_week: formData.lactation_week,
-        nursing_count: formData.nursing_count,
-        health_conditions: formData.health_conditions.reduce((acc, condition) => {
-          acc[condition] = true;
-          return acc;
-        }, {} as Record<string, any>),
-        allergies: formData.allergies.reduce((acc, allergy) => {
-          acc[allergy] = true;
-          return acc;
-        }, {} as Record<string, any>),
-        daily_calories_kcal: calculatedEnergy || undefined
-      };
-
-      await createPet(petData, token);
+        repro_state:         formData.repro_state,
+        life_stage:          inferLifeStage(formData),
+        lactation_week:      formData.lactation_week,
+        nursing_count:       formData.nursing_count,
+        health_conditions:   formData.health_conditions.reduce(
+          (acc, c) => ({ ...acc, [c]: true }), {} as Record<string, any>
+        ),
+        allergies: formData.allergies.reduce(
+          (acc, a) => ({ ...acc, [a]: true }), {} as Record<string, any>
+        ),
+        daily_calories_kcal: calculatedEnergy,
+      });
       setSuccess(true);
-      
-      // 延迟后跳转
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
+      setTimeout(() => navigate('/dashboard'), 1500);
     } catch (err: any) {
-      console.error('Error saving pet:', err);
-      setError('Failed to save pet: ' + err.message);
+      setFormError('Failed to save pet: ' + err.message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
+  // ----------------------------------------------------------
+  // Generate Recipe
+  // 不再调用 createPet，直接用表单数据构建临时 Pet 对象
+  // 传给 recipeGen.generate，generate 内部跳转到结果页
+  // ----------------------------------------------------------
+  const handleGenerateRecipe = async () => {
+    if (!calculatedEnergy) {
+      setFormError('Please wait for energy calculation to complete');
+      return;
+    }
+
+    setFormError('');
+
+    // 构建临时 Pet 对象（不写数据库，id 用空字符串占位）
+    const tempPet: Pet = {
+      id:                  '',             // 无需真实 id，generate 不使用
+      owner_uid:           currentUser?.uid ?? 'guest',
+      name:                formData.name,
+      species:             Species.DOG,
+      breed:               formData.breed || undefined,
+      size_class:          formData.size_class,
+      age_months:          formData.age_months,
+      weight_kg:           formData.weight_kg,
+      activity_level:      formData.activity_level,
+      reproductive_status: formData.reproductive_status,
+      repro_state:         formData.repro_state,
+      life_stage:          inferLifeStage(formData),
+      lactation_week:      formData.lactation_week,
+      nursing_count:       formData.nursing_count,
+      health_conditions:   formData.health_conditions.reduce(
+        (acc, c) => ({ ...acc, [c]: true }), {} as Record<string, any>
+      ),
+      allergies: formData.allergies.reduce(
+        (acc, a) => ({ ...acc, [a]: true }), {} as Record<string, any>
+      ),
+      daily_calories_kcal: calculatedEnergy,   // ← 关键：把计算好的能量传进去
+    };
+
+    // 直接生成，generate 内部完成后自动跳转 /recipes/result
+    await recipeGen.generate(tempPet, navigate);
+  };
+
+  const isGenerating = recipeGen.status === 'generating';
+  const isBusy = saving || isGenerating;
+
+  // ----------------------------------------------------------
+  // 渲染
+  // ----------------------------------------------------------
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+
+      <AppHeader />
+
+      {/* 全局 Loading 遮罩 */}
+      {isGenerating && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-xs w-full mx-4">
+            <Loader className="w-12 h-12 animate-spin text-green-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Generating Recipe</h3>
+            <p className="text-sm text-gray-500 mb-4">Optimizing nutrition plan for your pet...</p>
+            <p className="text-3xl font-bold text-green-600">{recipeGen.elapsedSeconds}s</p>
+            <p className="text-xs text-gray-400 mt-1">This may take 1–3 minutes</p>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-2xl mx-auto py-8 px-4">
+
         <div className="mb-6">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Dashboard
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900">Add New Pet</h1>
-          <p className="text-gray-600 mt-2">
-            Enter your pet's information to calculate daily calorie needs
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Add New Pet</h1>
+          <p className="text-sm text-gray-500 mt-1">Fill in your dog's info to generate a personalized recipe</p>
         </div>
 
-        {/* Success Message */}
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-800 font-medium">
-              ✓ Pet added successfully! Redirecting...
-            </p>
+            <p className="text-green-800 font-medium">✅ Pet saved! Redirecting...</p>
           </div>
         )}
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
-            <AlertCircle className="w-5 h-5 text-red-600 mr-3 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-800">{error}</p>
+        {formError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-800">{formError}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-8">
-          {/* Basic Information */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
-            
-            {/* Pet Name */}
+        {recipeGen.status === 'error' && recipeGen.errorMessage && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start justify-between">
+            <p className="text-yellow-800 text-sm">{recipeGen.errorMessage}</p>
+            <button onClick={recipeGen.reset} className="text-yellow-600 text-sm underline ml-4">Dismiss</button>
+          </div>
+        )}
+
+        <form onSubmit={handleSave} className="space-y-6">
+
+          {/* ── 基本信息 ───────────────────────────────── */}
+          <section className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Info</h2>
+
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Pet Name *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Pet Name *</label>
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="e.g., Max"
+                onChange={e => update({ name: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="e.g. Buddy"
                 required
               />
             </div>
 
-            {/* Species */}
+            {/* Species 固定为 Dog，只读展示 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Species *
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, species: Species.DOG })}
-                  className={`p-4 border-2 rounded-lg transition-all ${
-                    formData.species === Species.DOG
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-3xl mb-2">🐕</div>
-                    <span className="font-medium">Dog</span>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, species: Species.CAT })}
-                  className={`p-4 border-2 rounded-lg transition-all ${
-                    formData.species === Species.CAT
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-3xl mb-2">🐱</div>
-                    <span className="font-medium">Cat</span>
-                  </div>
-                </button>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Species</label>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg text-green-700 font-medium text-sm">
+                🐕 Dog
               </div>
             </div>
 
-            {/* Breed */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Breed (Optional)
-              </label>
-              <input
-                type="text"
-                value={formData.breed}
-                onChange={(e) => setFormData({ ...formData, breed: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="e.g., Golden Retriever"
-              />
-            </div>
-
-            {/* Size Class (only for dogs) */}
-            {formData.species === Species.DOG && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Size Class *
-                </label>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Breed (optional)</label>
+                <input
+                  type="text"
+                  value={formData.breed}
+                  onChange={e => update({ breed: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="e.g. Labrador"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Size Class</label>
                 <select
                   value={formData.size_class}
-                  onChange={(e) => setFormData({ ...formData, size_class: e.target.value as SizeClass })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
+                  onChange={e => update({ size_class: e.target.value as SizeClass })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 >
                   <option value={SizeClass.TOY}>Toy (&lt;5 kg)</option>
-                  <option value={SizeClass.SMALL}>Small (5-10 kg)</option>
-                  <option value={SizeClass.MEDIUM}>Medium (10-25 kg)</option>
-                  <option value={SizeClass.LARGE}>Large (25-45 kg)</option>
+                  <option value={SizeClass.SMALL}>Small (5–10 kg)</option>
+                  <option value={SizeClass.MEDIUM}>Medium (10–25 kg)</option>
+                  <option value={SizeClass.LARGE}>Large (25–45 kg)</option>
                   <option value={SizeClass.GIANT}>Giant (&gt;45 kg)</option>
                 </select>
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Physical Information */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <Weight className="w-5 h-5 mr-2 text-green-600" />
-              Physical Information
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Age */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  Age (months) *
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <Calendar className="w-4 h-4 inline mr-1" />Age (months) *
                 </label>
                 <input
                   type="number"
                   value={formData.age_months}
-                  onChange={(e) => setFormData({ ...formData, age_months: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  min="1"
-                  max="300"
-                  required
+                  onChange={e => update({ age_months: parseInt(e.target.value) || 12 })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  min="1" max="300" required
                 />
               </div>
-
-              {/* Weight */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Weight className="w-4 h-4 inline mr-1" />
-                  Weight (kg) *
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <Weight className="w-4 h-4 inline mr-1" />Weight (kg) *
                 </label>
                 <input
                   type="number"
                   step="0.1"
                   value={formData.weight_kg}
-                  onChange={(e) => setFormData({ ...formData, weight_kg: parseFloat(e.target.value) })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  min="0.1"
-                  max="100"
-                  required
+                  onChange={e => update({ weight_kg: parseFloat(e.target.value) || 20 })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  min="0.1" max="200" required
                 />
               </div>
             </div>
+          </section>
 
-            {/* Birth Date (Optional) */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Birth Date (Optional)
-              </label>
-              <input
-                type="date"
-                value={formData.birth_date}
-                onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Activity & Status */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <Activity className="w-5 h-5 mr-2 text-green-600" />
-              Activity & Status
+          {/* ── 活动与繁殖状态 ──────────────────────── */}
+          <section className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-green-600" />Activity & Status
             </h2>
 
-            {/* Activity Level */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Activity Level *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Activity Level *</label>
               <select
                 value={formData.activity_level}
-                onChange={(e) => setFormData({ ...formData, activity_level: e.target.value as ActivityLevel })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
+                onChange={e => update({ activity_level: e.target.value as ActivityLevel })}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
-                <option value={ActivityLevel.SEDENTARY}>Sedentary (little to no exercise)</option>
-                <option value={ActivityLevel.LIGHT_ACTIVE}>Light Active (1-2 days/week)</option>
-                <option value={ActivityLevel.MODERATE_ACTIVE}>Moderate Active (3-5 days/week)</option>
-                <option value={ActivityLevel.VERY_ACTIVE}>Very Active (6-7 days/week)</option>
-                <option value={ActivityLevel.EXTREMELY_ACTIVE}>Extremely Active (athlete/working dog)</option>
+                <option value={ActivityLevel.SEDENTARY}>Sedentary (little/no exercise)</option>
+                <option value={ActivityLevel.LOW}>Low (light activity)</option>
+                <option value={ActivityLevel.MODERATE}>Moderate (regular exercise)</option>
+                <option value={ActivityLevel.HIGH}>High (very active)</option>
+                <option value={ActivityLevel.EXTREME}>Extreme (working/sport dog)</option>
               </select>
             </div>
 
-            {/* Reproductive Status */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Reproductive Status *
-              </label>
-              <select
-                value={formData.reproductive_status}
-                onChange={(e) => setFormData({ ...formData, reproductive_status: e.target.value as ReproductiveStatus })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
-              >
-                <option value={ReproductiveStatus.NEUTERED}>Neutered/Spayed</option>
-                <option value={ReproductiveStatus.INTACT}>Intact</option>
-              </select>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Reproductive Status *</label>
+              <div className="flex gap-3">
+                {[
+                  { value: ReproductiveStatus.INTACT,   label: 'Intact' },
+                  { value: ReproductiveStatus.NEUTERED, label: 'Neutered / Spayed' },
+                ].map(opt => (
+                  <button
+                    key={opt.value} type="button"
+                    onClick={() => update({ reproductive_status: opt.value })}
+                    className={`flex-1 py-2.5 rounded-lg border-2 font-medium text-sm transition-colors
+                      ${formData.reproductive_status === opt.value
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Reproductive State */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Heart className="w-4 h-4 inline mr-1" />
-                Reproductive State *
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Heart className="w-4 h-4 inline mr-1" />Reproductive State *
               </label>
               <select
                 value={formData.repro_state}
-                onChange={(e) => setFormData({ ...formData, repro_state: e.target.value as ReproState })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
+                onChange={e => update({ repro_state: e.target.value as ReproState })}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
                 <option value={ReproState.NONE}>None</option>
                 <option value={ReproState.PREGNANT}>Pregnant</option>
@@ -459,103 +396,118 @@ const AddPetForm: React.FC = () => {
               </select>
             </div>
 
-            {/* Lactation Details (if lactating) */}
             {formData.repro_state === ReproState.LACTATING && (
-              <div className="grid grid-cols-2 gap-4 p-4 bg-pink-50 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-pink-50 rounded-lg border border-pink-100">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Lactation Week
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Lactation Week</label>
                   <input
                     type="number"
                     value={formData.lactation_week}
-                    onChange={(e) => setFormData({ ...formData, lactation_week: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    min="1"
-                    max="12"
+                    onChange={e => update({ lactation_week: parseInt(e.target.value) || 4 })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    min="1" max="12"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Offspring
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Number of Offspring</label>
                   <input
                     type="number"
                     value={formData.nursing_count}
-                    onChange={(e) => setFormData({ ...formData, nursing_count: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    min="1"
-                    max="15"
+                    onChange={e => update({ nursing_count: parseInt(e.target.value) || 1 })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    min="1" max="15"
                   />
                 </div>
               </div>
             )}
-          </div>
+          </section>
 
-          {/* Energy Calculation */}
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          {/* ── 每日能量（自动计算） ─────────────────── */}
+          <section className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-100">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-green-600" />
               Daily Energy Requirement
+              <span className="text-xs font-normal text-gray-400 ml-1">(auto-calculated)</span>
             </h2>
-            
-            <button
-              type="button"
-              onClick={handleCalculateEnergy}
-              disabled={loading}
-              className="w-full md:w-auto bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mb-4"
-            >
-              {loading ? (
-                <>
-                  <Loader className="w-5 h-5 mr-2 animate-spin" />
-                  Calculating...
-                </>
-              ) : (
-                'Calculate Energy Requirement'
-              )}
-            </button>
 
-            {calculatedEnergy !== null && (
-              <div className="p-4 bg-white rounded-lg border-2 border-green-500">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-1">Daily Calorie Requirement</p>
-                  <p className="text-4xl font-bold text-green-600">
-                    {calculatedEnergy.toFixed(0)}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">kcal/day</p>
-                </div>
+            {energyLoading ? (
+              <div className="flex items-center gap-2 text-green-700">
+                <Loader className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Calculating...</span>
+              </div>
+            ) : energyError ? (
+              <div className="flex items-center gap-2 text-red-600">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm">{energyError}</span>
+              </div>
+            ) : calculatedEnergy !== null ? (
+              <div className="bg-white rounded-lg border-2 border-green-400 p-4 text-center">
+                <p className="text-sm text-gray-500 mb-1">Daily Calorie Requirement</p>
+                <p className="text-5xl font-bold text-green-600">{calculatedEnergy.toFixed(0)}</p>
+                <p className="text-sm text-gray-500 mt-1">kcal / day</p>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">Calculating energy requirement...</p>
+            )}
+
+            {energyWarnings.length > 0 && (
+              <div className="mt-3 space-y-1">
+                {energyWarnings.map((w, i) => (
+                  <p key={i} className="text-xs text-yellow-700 bg-yellow-50 px-3 py-1 rounded">⚠️ {w}</p>
+                ))}
               </div>
             )}
 
-            <p className="text-xs text-gray-500 mt-3">
-              * This calculation is based on AAFCO standards and your pet's specific characteristics.
+            <p className="text-xs text-gray-400 mt-3">
+              * Based on AAFCO standards. Updates automatically when you change any field.
             </p>
-          </div>
+          </section>
 
-          {/* Submit Buttons */}
-          <div className="flex gap-4">
+          {/* ── 按钮区 ──────────────────────────────── */}
+          <div className="flex flex-col gap-3">
+
+            {/* Generate Recipe（不保存，直接生成） */}
+            <button
+              type="button"
+              onClick={handleGenerateRecipe}
+              disabled={isBusy || !calculatedEnergy}
+              className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isGenerating
+                ? <><Loader className="w-5 h-5 animate-spin" /> Generating... {recipeGen.elapsedSeconds}s</>
+                : <><ChefHat className="w-5 h-5" /> Generate Recipe</>
+              }
+            </button>
+
+            {/* Save Pet（保存到数据库） */}
             <button
               type="submit"
-              disabled={loading || !calculatedEnergy}
-              className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isBusy || !calculatedEnergy || success}
+              className="w-full bg-gray-700 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save className="w-5 h-5 mr-2" />
-              Save Pet
+              {saving && !isGenerating
+                ? <><Loader className="w-5 h-5 animate-spin" /> Saving...</>
+                : <><Save className="w-5 h-5" /> Save Pet</>
+              }
             </button>
-            
+
+            {/* Cancel */}
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              disabled={isBusy}
+              className="w-full py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
           </div>
 
-          {!calculatedEnergy && (
-            <p className="text-sm text-gray-500 text-center">
-              Please calculate energy requirement before saving
+          {!calculatedEnergy && !energyLoading && !energyError && (
+            <p className="text-sm text-gray-400 text-center">
+              Energy calculation is required before generating a recipe
             </p>
           )}
+
         </form>
       </div>
     </div>
