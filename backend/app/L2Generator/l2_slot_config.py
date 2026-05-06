@@ -17,16 +17,16 @@ from app.L2Generator.l2_data_models import SlotType, SlotConstraint, RiskTagCons
 SLOT_CONSTRAINTS = {
     SlotType.MAIN_PROTEIN: SlotConstraint(
         slot=SlotType.MAIN_PROTEIN,
-        min_ratio=0.30,      # 硬最小值降低 (从 0.40 → 0.30)
-        max_ratio=0.90,      # 硬最大值
+        min_ratio=0.25,      # 硬最小值降低 (从 0.40 → 0.30)
+        max_ratio=0.80,      # 硬最大值
         ideal_min=0.40,      # 理想最小值 (通过罚分引导)
-        ideal_max=0.70       # 理想最大值
+        ideal_max=0.50       # 理想最大值
     ),
     
     SlotType.ORGAN_LIVER: SlotConstraint(
         slot=SlotType.ORGAN_LIVER,
         min_ratio=0.00,      # 不设硬最小值 (允许无肝脏的配方)
-        max_ratio=0.06,      # 硬最大值: 严格限制 6%
+        max_ratio=0.05,      # 硬最大值: 严格限制 6%
         ideal_min=0.03,      # 理想: 3-5%
         ideal_max=0.05
     ),
@@ -34,7 +34,7 @@ SLOT_CONSTRAINTS = {
     SlotType.ORGAN_SECRETING: SlotConstraint(
         slot=SlotType.ORGAN_SECRETING,
         min_ratio=0.00,
-        max_ratio=0.07,      # 分泌型器官: 限制 7%
+        max_ratio=0.05,      # 分泌型器官: 限制 7%
         ideal_min=0.03,
         ideal_max=0.05
     ),
@@ -42,9 +42,9 @@ SLOT_CONSTRAINTS = {
     SlotType.ORGAN_MUSCULAR: SlotConstraint(
         slot=SlotType.ORGAN_MUSCULAR,
         min_ratio=0.00,
-        max_ratio=0.20,      # 肌肉型器官: 适量
+        max_ratio=0.15,      # 肌肉型器官: 适量
         ideal_min=0.05,
-        ideal_max=0.15
+        ideal_max=0.10
     ),
     
     SlotType.MINERAL_SHELLFISH: SlotConstraint(
@@ -58,9 +58,9 @@ SLOT_CONSTRAINTS = {
     SlotType.VEGETABLE: SlotConstraint(
         slot=SlotType.VEGETABLE,
         min_ratio=0.00,
-        max_ratio=0.15,      # 蔬菜: 纤维来源
+        max_ratio=0.10,      # 蔬菜: 纤维来源
         ideal_min=0.05,
-        ideal_max=0.10
+        ideal_max=0.08
     ),
     
     SlotType.CARBOHYDRATE: SlotConstraint(
@@ -152,7 +152,7 @@ SUBGROUP_CONSTRAINTS = {
     },
     
     "organ_kidney": {
-        "max_ratio": 0.08,   # 肾脏: 适量
+        "max_ratio": 0.06,   # 肾脏: 适量
         "reason": "肾脏维生素A含量较高"
     },
     

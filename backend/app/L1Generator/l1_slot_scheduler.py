@@ -65,9 +65,9 @@ class SlotScheduler:
             logger.debug(f"槽位 [{slot_name}] 状态: {old_state} → {state} ({reason})")
 
 
-    # 🟢 新增：获取槽位是否必选
+    # Fix #3: 原实现引用了未定义的 self.mandatory_slots，改为从 slot_states 读取
     def is_slot_mandatory(self, slot_name: str) -> bool:
-        return self.mandatory_slots.get(slot_name, False)
+        return self.slot_states.get(slot_name) == "mandatory"
     
     def get_active_slots(self) -> List[str]:
         """
@@ -142,43 +142,38 @@ class SlotScheduler:
   
         
         # === 纤维逻辑 ===
-        # 如果碳水含纤维,跳过纤维槽
-        if policies.skip_fiber_if_carb_has_fiber:
-            has_fiber_source = False
-            existing_source_name = ""
-            
-            # 遍历所有已选槽位的食材列表
-            for ing_list in self.selected_ingredients.values():
-                for ing in ing_list:
-                    if ing.has_tag("role_fiber_source"):
-                        has_fiber_source = True
-                        existing_source_name = ing.short_name
-                        break
-                if has_fiber_source:
+        # Fix #1: 原实现将 force_fiber_if_no_carb 嵌套在 skip_fiber_if_carb_has_fiber 的
+        # else 分支中，导致两个 policy 同时为 True 时，force_fiber 永远不会触发。
+        # 修复：两个 policy 独立判断，互不嵌套。
+        has_fiber_source = False
+        existing_source_name = ""
+        for ing_list in self.selected_ingredients.values():
+            for ing in ing_list:
+                if ing.has_tag("role_fiber_source"):
+                    has_fiber_source = True
+                    existing_source_name = ing.short_name
                     break
-
             if has_fiber_source:
-                # A. 已有纤维源 -> 禁用纤维槽
-                self.set_slot_state(
-                    "fiber", 
-                    "disabled", 
-                    f"已有纤维源({existing_source_name}),禁用纤维槽"
-                )
-            
+                break
+
+        if policies.skip_fiber_if_carb_has_fiber and has_fiber_source:
+            # A. 已有纤维源 → 禁用纤维槽（优先级最高）
+            self.set_slot_state(
+                "fiber",
+                "disabled",
+                f"已有纤维源({existing_source_name})，禁用纤维槽"
+            )
         else:
-            # B. 没有纤维源 -> 检查是否需要强制
-            # 检查是否有碳水 (用于判断是否处于"无碳水"状态)
+            # B. 没有纤维源 → 检查是否需要强制（两个 policy 独立）
             has_carb = len(carbohydrate) > 0
-            
-            if not has_carb and policies.force_fiber_if_no_carb:
-                # 无碳水且无其他纤维源 -> 必选
+            if not has_fiber_source and not has_carb and policies.force_fiber_if_no_carb:
+                # 无碳水且无其他纤维源 → 必选
                 self.set_slot_state(
-                    "fiber", 
-                    "mandatory", 
-                    "无碳水且无其他纤维源,强制纤维必选"
+                    "fiber",
+                    "mandatory",
+                    "无碳水且无其他纤维源，强制纤维必选"
                 )
             else:
-                # 其他情况 (有白米饭但无纤维标签，或无碳水但也无强制策略) -> 恢复默认(通常是 Optional)
                 initial = self.config.slots["fiber"].initial_state
                 self.set_slot_state("fiber", initial, "恢复默认状态")
 
@@ -201,7 +196,7 @@ class SlotScheduler:
             core_ingredients_count = 0
             for ing_list in self.selected_ingredients.values():
                 for ing in ing_list:
-                    if ing.ingredient_group not in ['FAT_OIL', 'SUPPLEMENT']:
+                    if ing.food_group not in ['FAT_OIL', 'SUPPLEMENT']:
                         core_ingredients_count += 1
 
             opt_default = self.config.slots["optional_ingredients"].is_mandatory_default
@@ -213,10 +208,9 @@ class SlotScheduler:
                 self.set_slot_state("optional_ingredients", "optional", "核心食材未满,允许可选食材")
             else:
                 # 满了 -> 禁用
-                self.set_slot_state("optional_ingredients", "diasble", "核心食材已满,禁用可选食材")
+                self.set_slot_state("optional_ingredients", "disabled", "核心食材已满,禁用可选食材")  # Fix #2: 修正拼写 "diasble" → "disabled"
 
-        if main_protein:
-            self._apply_species_constraints(main_protein[0])
+        # Fix #4: 删除末尾重复调用 _apply_species_constraints（函数开头第109行已调用）
     
     def _apply_species_constraints(self, decision_protein: Ingredient):
         """
@@ -272,9 +266,8 @@ class SlotScheduler:
         
         slot_config = self.config.slots[slot_name]
 
-        candidates = self.ingredients_df.copy()
-
-        # 应用筛选器
+        # Fix #8: 删除无效的 df.copy()——立刻被 _apply_filters 覆盖，且 _apply_filters 内部已有 copy
+        # 直接调用 _apply_filters
         candidates = self._apply_filters(
             self.ingredients_df,
             slot_config.filters
@@ -303,11 +296,11 @@ class SlotScheduler:
         """应用 IngredientFilter"""
         result = df.copy()
         
-        # 过滤 ingredient_group
+        # 过滤 food_group
         if filters.allowed_groups:
             allowed = [g.value if isinstance(g, Enum) else g 
                       for g in filters.allowed_groups]
-            result = result[result['ingredient_group'].isin(allowed)]
+            result = result[result['food_group'].isin(allowed)]
         
         # 过滤 food_subgroup
         if filters.allowed_subgroups:
@@ -380,7 +373,7 @@ class SlotScheduler:
                 ingredient_id=row['ingredient_id'],
                 description=row['description'],
                 short_name=row.get('short_name', row['description']),
-                ingredient_group=row['ingredient_group'],
+                food_group=row['food_group'],
                 food_subgroup=row['food_subgroup'],
                 tags=row['tags'] if isinstance(row['tags'], list) else [],
                 diversity_tags=diversity_tags,

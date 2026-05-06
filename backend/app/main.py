@@ -1,12 +1,7 @@
 """
 main.py
 FastAPI 后端入口 — 演示版（同步）
-路径：backend/main.py
-
-接口：
-  POST /api/calculate-energy   能量计算（同步）
-  POST /recipes/generate       食谱生成（同步，直接返回结果）
-
+路径：backend/app/main.py
 Cloud Run 部署时必须调高超时时间：
   gcloud run services update YOUR_SERVICE \
     --timeout=600 \
@@ -27,27 +22,33 @@ from typing import List, Optional, Dict
 from dotenv import load_dotenv
 
 ENV_FILE = Path(__file__).parent.parent / ".env"
-print(f"ENV_FILE.exists: {ENV_FILE.exists()}")
 
 if ENV_FILE.exists():
     load_dotenv(dotenv_path=ENV_FILE)
 
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 # ── 业务组件 ──────────────────────────────────────────────────
 from app.common.enums import (
-    LifeStage, NutrientID, ActivityLevel,
-    ReproductiveStatus, ReproState, Species,
+    LifeStage, NutrientID,
 )
+from app.db.connection import create_db_engine, dispose_engine
+
+from app.domains.ingredients.infra.ingredient_data_cache import IngredientDataCache
+from app.domains.ingredients.infra.ingredient_repository import IngredientRepository
+from app.domains.ingredients.infra.ingredient_nutrients_repository import IngredientNutrientsRepository
+
 from app.database.data_loader import IngredientDataLoader
 from app.L1Generator.l1_recipe_generator import L1RecipeGenerator
 from app.L2Generator.l2_optimizer import L2Optimizer
 from app.L2Generator.l2_data_models import PetProfile, OptimizationResult
-from app.EnergyCalculator.energy_calculator import EnergyCalculator
 from app.recipe_engine import RecipeEngine
+
+# ── Explain Router ───────────────────────────────────────────
+from app.api.api_router import api_router
 
 # ==========================================
 # 日志
@@ -61,14 +62,6 @@ logger = logging.getLogger(__name__)
 
 ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")
 
-logger.info(f"ENV_FILE:{ENV_FILE}")
-logger.info(f"DB_PASSWORD:{os.environ.get('DB_PASSWORD')}")
-logger.info(f"instance_name: {os.environ['INSTANCE_CONNECTION_NAME']}")
-logger.info(f"GCP_PROJECT_ID: {os.environ.get('GCP_PROJECT_ID', 'None')}")
-logger.info(f"VITE_FIREBASE_MEASUREMENT_ID: {os.environ.get('VITE_FIREBASE_MEASUREMENT_ID', 'None')}")
-logger.info(f"PROJECT_ID: {os.environ.get('PROJECT_ID', 'None')}")
-logger.info(f"DB_INSTANCE_NAME: {os.environ.get('DB_INSTANCE_NAME', 'None')}")
-
 # ==========================================
 # 全局应用状态（服务启动时初始化一次）
 # ==========================================
@@ -76,10 +69,10 @@ logger.info(f"DB_INSTANCE_NAME: {os.environ.get('DB_INSTANCE_NAME', 'None')}")
 class AppState:
     def __init__(self):
         self.data_loader: Optional[IngredientDataLoader] = None
-        self.ingredients_df     = None
-        self.l1_generator: Optional[L1RecipeGenerator]  = None
-        self.l2_optimizer: Optional[L2Optimizer]        = None
-        self.recipe_engine: Optional[RecipeEngine]      = None
+        self.ingredients_df = None
+        self.l1_generator: Optional[L1RecipeGenerator] = None
+        self.l2_optimizer: Optional[L2Optimizer] = None
+        self.recipe_engine: Optional[RecipeEngine] = None
         self.is_initialized: bool = False
 
 app_state = AppState()
@@ -92,10 +85,25 @@ app_state = AppState()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("=" * 60)
-    logger.info(f"🚀 启动食谱生成服务（同步演示版）env={ENVIRONMENT}")
+    logger.info(f"🚀 Deploy Recipe Service ... env={ENVIRONMENT}")
     logger.info("=" * 60)
 
     try:
+        engine = create_db_engine()
+
+        ingredient_cache = IngredientDataCache.load_from_db(engine)
+
+        app.state.db_engine = engine
+        app.state.ingredient_data_cache = ingredient_cache
+        app.state.ingredient_repository = IngredientRepository(
+            engine=engine,
+            data_cache=ingredient_cache,
+        )
+        app.state.ingredient_nutrients_repository = IngredientNutrientsRepository(
+            engine=engine,
+            data_cache=ingredient_cache,
+        )
+
         db_url = _build_db_url()
 
         logger.info("[1/4] 初始化数据加载器...")
@@ -111,7 +119,7 @@ async def lifespan(app: FastAPI):
         app_state.l1_generator = L1RecipeGenerator(app_state.ingredients_df)
 
         logger.info("[4/4] 构建 L2 优化器 & Recipe Engine...")
-        app_state.l2_optimizer  = L2Optimizer()
+        app_state.l2_optimizer = L2Optimizer()
         app_state.recipe_engine = RecipeEngine(
             data_loader=app_state.data_loader,
             l1_generator=app_state.l1_generator,
@@ -128,22 +136,36 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("服务关闭")
+    dispose_engine(engine)
 
 
 def _build_db_url() -> str:
     if ENVIRONMENT == "production":
-        instance_connection_name = os.environ["INSTANCE_CONNECTION_NAME"]
-        user     = os.environ["DB_USER"]
-        password = os.environ["DB_PASSWORD"]
-        db_name  = os.environ["DB_NAME"]
-        socket   = f"/cloudsql/{instance_connection_name}/.s.PGSQL.5432"
+        instance_connection_name = os.environ.get("INSTANCE_CONNECTION_NAME")
+        user = os.environ.get("DB_USER")
+        password = os.environ.get("DB_PASSWORD")
+        db_name = os.environ.get("DB_NAME")
+
+        missing = [
+            name for name, value in {
+                "INSTANCE_CONNECTION_NAME": instance_connection_name,
+                "DB_USER": user,
+                "DB_PASSWORD": password,
+                "DB_NAME": db_name,
+            }.items() if not value
+        ]
+
+        if missing:
+            raise RuntimeError(f"缺少生产环境变量: {', '.join(missing)}")
+
+        socket = f"/cloudsql/{instance_connection_name}/.s.PGSQL.5432"
         return f"postgresql+pg8000://{user}:{password}@/{db_name}?unix_sock={socket}"
     else:
-        host     = os.environ.get("DB_HOST", "127.0.0.1")
-        port     = os.environ.get("DB_PORT", "15432")
-        user     = os.environ.get("DB_USER", "postgres")
+        host = os.environ.get("DB_HOST", "127.0.0.1")
+        port = os.environ.get("DB_PORT", "15432")
+        user = os.environ.get("DB_USER", "postgres")
         password = os.environ.get("DB_PASSWORD", "")
-        db_name  = os.environ.get("DB_NAME", "tuanty_recipe")
+        db_name = os.environ.get("DB_NAME", "tuanty_recipe")
         return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db_name}"
 
 
@@ -167,6 +189,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 注册 explain router
+
+app.include_router(api_router)
 
 # ==========================================
 # Pydantic 模型
@@ -175,83 +200,88 @@ app.add_middleware(
 # ── EnergyCalculator ──────────────────────
 
 class EnergyRequest(BaseModel):
-    weight_kg:           float = Field(..., gt=0)
-    species:             str
-    age_months:          int   = Field(..., ge=1)
-    activity_level:      str
-    reproductive_status: str
-    repro_state:         str
-    breed:               Optional[str] = None
-    lactation_week:      int = 4
-    nursing_count:       int = 1
-    senior_month:        Optional[int] = None
+    weight_kg: float = Field(..., gt=0)
+    species: str
+    age_months: int = Field(..., ge=1)
+    activity_level: str
+    sterilization_status: str
+    reproductive_stage: str
+    breed: Optional[str] = None
+    lactation_week: int = 4
+    nursing_count: int = 1
+    senior_month: Optional[int] = None
 
 
 class EnergyResponse(BaseModel):
-    resting_energy_kcal:   float
-    daily_energy_kcal:     float
-    life_stage:            str
-    model_version:         str
+    resting_energy_kcal: float
+    daily_energy_kcal: float
+    life_stage: str
+    model_version: str
     calculation_breakdown: Dict[str, float]
-    warnings:              List[str]
+    warnings: List[str]
 
 
 # ── 食谱生成 ──────────────────────────────
 
 class PetProfileRequest(BaseModel):
-    target_calories:     float = Field(..., gt=0)
-    body_weight:         float = Field(..., gt=0)
-    life_stage:          str
-    allergies:           List[str] = []
-    size_class:          Optional[str] = "medium"
-    activity_level:      Optional[str] = None
-    health_conditions:   List[str] = []
-    reproductive_status: Optional[str] = "intact"
+    daily_calories_kcal: float = Field(..., gt=0)
+    weight_kg: float = Field(..., gt=0)
+    life_stage: str
+    size_class: Optional[str] = "medium"
+    activity_level: Optional[str] = None
+    health_conditions: List[str] = []
+    sterilization_status: Optional[str] = "intact"
+    reproductive_stage: Optional[str] = None
+    allergies: Optional[List[str]] = []
+    species: str = "dog"
+    breed: Optional[str] = None
+    age_months: Optional[int] = 12
 
 
 class GenerateRequest(BaseModel):
-    pet_profile: PetProfileRequest
-    top_k:       int = Field(default=5, ge=1, le=20)
+    pet: PetProfileRequest
+    top_k: int = Field(default=5, ge=1, le=20)
 
 
 # ── 食谱结果 ──────────────────────────────
 
 class NutrientAnalysisOut(BaseModel):
-    nutrient_id:          str
-    nutrient_name:        str
-    value:                Optional[float]
-    unit:                 Optional[str]
-    min_required:         Optional[float]
-    max_allowed:          Optional[float]
-    ideal_target:         Optional[float]
-    meets_min:            bool
-    meets_max:            bool
+    nutrient_id: str
+    nutrient_name: str
+    value: Optional[float]
+    unit: Optional[str]
+    min_required: Optional[float]
+    max_allowed: Optional[float]
+    ideal_target: Optional[float]
+    meets_min: bool
+    meets_max: bool
     deviation_from_ideal: Optional[float]
 
 
 class OptimizedWeightOut(BaseModel):
-    ingredient_id:   str
+    ingredient_id: str
     ingredient_name: str
-    weight_grams:    float
-    percentage:      float   # 占总重量百分比，后端计算
-    is_supplement:   bool
+    weight_grams: float
+    percentage: float   # 占总重量百分比，后端计算
+    is_supplement: bool
+    slot_name: Optional[str]
 
 
 class RecipeOut(BaseModel):
-    rank:               int
-    combination_id:     str
+    rank: int
+    recipe_id: str
     total_weight_grams: float
-    objective_value:    Optional[float]
-    used_supplements:   List[str]
-    weights:            List[OptimizedWeightOut]
-    nutrient_analysis:  List[NutrientAnalysisOut]
+    objective_value: Optional[float]
+    used_supplements: List[str]
+    weights: List[OptimizedWeightOut]
+    nutrient_analysis: List[NutrientAnalysisOut]
 
 
 class GenerateResponse(BaseModel):
     """同步版：直接返回食谱列表"""
-    success:      bool
-    total:        int
-    recipes:      List[RecipeOut]
+    success: bool
+    total: int
+    recipes: List[RecipeOut]
     elapsed_seconds: float
 
 
@@ -284,7 +314,6 @@ def _serialize_results(results: List[OptimizationResult]) -> List[RecipeOut]:
     for rank, result in enumerate(results, start=1):
         total = result.total_weight_grams or 1.0
 
-        # 食材列表（按重量降序）
         weights_out = []
         if result.weights:
             for w in sorted(result.weights, key=lambda x: x.weight_grams, reverse=True):
@@ -294,13 +323,12 @@ def _serialize_results(results: List[OptimizationResult]) -> List[RecipeOut]:
                     weight_grams=round(w.weight_grams, 2),
                     percentage=round(w.weight_grams / total * 100, 2),
                     is_supplement=w.is_supplement,
+                    slot_name=w.slot_name,
                 ))
 
-        # 营养素列表
         nutrients_out = []
         if result.nutrient_analysis:
             for n in result.nutrient_analysis:
-                # nutrient_id: IntEnum → 小写字符串，兼容已是字符串的情况
                 if isinstance(n.nutrient_id, int):
                     try:
                         nid = NutrientID(n.nutrient_id).name.lower()
@@ -315,7 +343,7 @@ def _serialize_results(results: List[OptimizationResult]) -> List[RecipeOut]:
                     value=round(float(n.value), 4) if n.value is not None else None,
                     unit=n.unit,
                     min_required=float(n.min_required) if n.min_required is not None else None,
-                    max_allowed=float(n.max_allowed)   if n.max_allowed  is not None else None,
+                    max_allowed=float(n.max_allowed) if n.max_allowed is not None else None,
                     ideal_target=float(n.ideal_target) if n.ideal_target is not None else None,
                     meets_min=n.meets_min,
                     meets_max=n.meets_max,
@@ -324,7 +352,7 @@ def _serialize_results(results: List[OptimizationResult]) -> List[RecipeOut]:
 
         output.append(RecipeOut(
             rank=rank,
-            combination_id=result.combination_id,
+            recipe_id=result.recipe_id,
             total_weight_grams=round(total, 2),
             objective_value=result.objective_value,
             used_supplements=result.used_supplements or [],
@@ -341,10 +369,10 @@ def _serialize_results(results: List[OptimizationResult]) -> List[RecipeOut]:
 @app.get("/", tags=["通用"])
 async def root():
     return {
-        "service":     "Pet Recipe Generator API",
-        "version":     "1.0.0-demo",
+        "service": "Pet Recipe Generator API",
+        "version": "1.0.0-demo",
         "environment": ENVIRONMENT,
-        "status":      "ready" if app_state.is_initialized else "initializing",
+        "status": "ready" if app_state.is_initialized else "initializing",
     }
 
 
@@ -363,35 +391,35 @@ async def health():
 # 能量计算（同步）
 # ──────────────────────────────────────────
 
-@app.post("/api/calculate-energy", response_model=EnergyResponse, tags=["能量计算"])
-async def calculate_energy(request: EnergyRequest):
-    """计算宠物每日能量需求，AddPetForm 表单变化时自动调用"""
-    try:
-        result = EnergyCalculator.calculate_daily_energy_requirement(
-            weight_kg=request.weight_kg,
-            species=Species(request.species),
-            age_months=request.age_months,
-            activity_level=ActivityLevel(request.activity_level),
-            reproductive_status=ReproductiveStatus(request.reproductive_status),
-            repro_state=ReproState(request.repro_state),
-            breed=request.breed,
-            lactation_week=request.lactation_week,
-            nursing_count=request.nursing_count,
-            senior_month=request.senior_month,
-        )
-        return EnergyResponse(
-            resting_energy_kcal=result.resting_energy_kcal,
-            daily_energy_kcal=result.daily_energy_kcal,
-            life_stage=result.life_stage,
-            model_version=result.model_version,
-            calculation_breakdown=result.calculation_breakdown,
-            warnings=result.warnings,
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
-        logger.error(f"能量计算异常：{e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"能量计算失败：{str(e)}")
+# @app.post("/api/calculate-energy", response_model=EnergyResponse, tags=["能量计算"])
+# async def calculate_energy(request: EnergyRequest):
+#     """计算宠物每日能量需求，AddPetForm 表单变化时自动调用"""
+#     try:
+#         result = EnergyCalculator.calculate_daily_energy_requirement(
+#             weight_kg=request.weight_kg,
+#             species=Species(request.species),
+#             age_months=request.age_months,
+#             activity_level=ActivityLevel(request.activity_level),
+#             sterilization_status=SterilizationStatus(request.sterilization_status),
+#             reproductive_stage=ReproductiveStage(request.reproductive_stage),
+#             breed=request.breed,
+#             lactation_week=request.lactation_week,
+#             nursing_count=request.nursing_count,
+#             senior_month=request.senior_month,
+#         )
+#         return EnergyResponse(
+#             resting_energy_kcal=result.resting_energy_kcal,
+#             daily_energy_kcal=result.daily_energy_kcal,
+#             life_stage=result.life_stage,
+#             model_version=result.model_version,
+#             calculation_breakdown=result.calculation_breakdown,
+#             warnings=result.warnings,
+#         )
+#     except ValueError as e:
+#         raise HTTPException(status_code=422, detail=str(e))
+#     except Exception as e:
+#         logger.error(f"能量计算异常：{e}", exc_info=True)
+#         raise HTTPException(status_code=500, detail=f"能量计算失败：{str(e)}")
 
 
 # ──────────────────────────────────────────
@@ -408,36 +436,33 @@ async def generate_recipes(request: GenerateRequest):
     """
     _check_initialized()
 
-    # 解析 life_stage
-    life_stage = _parse_life_stage(request.pet_profile.life_stage)
+    life_stage = _parse_life_stage(request.pet.life_stage)
 
-    # 构建 PetProfile
-    pet_profile = PetProfile(
-        target_calories=request.pet_profile.target_calories,
-        body_weight=request.pet_profile.body_weight,
+    pet = PetProfile(
+        daily_calories_kcal=request.pet.daily_calories_kcal,
+        weight_kg=request.pet.weight_kg,
         life_stage=life_stage,
-        allergies=request.pet_profile.allergies,
-        size_class=request.pet_profile.size_class,
-        activity_level=request.pet_profile.activity_level,
-        health_conditions=request.pet_profile.health_conditions,
-        reproductive_status=request.pet_profile.reproductive_status,
+        allergies=request.pet.allergies,
+        size_class=request.pet.size_class,
+        activity_level=request.pet.activity_level,
+        health_conditions=request.pet.health_conditions,
+        sterilization_status=request.pet.sterilization_status,
     )
 
     logger.info(
         f"[generate] 开始计算 life_stage={life_stage.name}, "
-        f"weight={request.pet_profile.body_weight}kg, "
-        f"calories={request.pet_profile.target_calories}kcal, "
+        f"weight={request.pet.weight_kg}kg, "
+        f"calories={request.pet.daily_calories_kcal}kcal, "
         f"top_k={request.top_k}"
     )
 
-    # 在线程池中执行（避免阻塞事件循环，保持心跳响应）
     import time
     start = time.perf_counter()
 
     try:
         results: List[OptimizationResult] = await asyncio.to_thread(
             app_state.recipe_engine.generate_recipes,
-            pet_profile,
+            pet,
             request.top_k,
         )
     except Exception as e:
@@ -480,6 +505,6 @@ if __name__ == "__main__":
         "app.main:app",
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 8080)),
-        reload=True,
+        reload=False,
         log_level="info",
     )

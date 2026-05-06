@@ -1,4 +1,8 @@
-pymysql
+# ==========================================
+# requirements.txt
+# 放置位置：backend/requirements.txt
+# ==========================================
+
 # Web Framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
@@ -6,26 +10,29 @@ pydantic==2.5.0
 
 # Database
 sqlalchemy==2.0.23
-psycopg2-binary==2.9.9
-pg8000==1.30.3
-
-# Google Cloud
-google-cloud-sql-connector==1.5.0
-cloud-sql-python-connector[pg8000]==1.5.0
+psycopg2-binary==2.9.9      # 本地开发用
+pg8000==1.30.3               # Cloud Run 生产环境用（纯 Python，无系统依赖）
 
 # Data Processing
 pandas==2.1.3
 numpy==1.26.2
 
-# Logging & Monitoring (optional)
+openai>=1.98.0
+anthropic>0.20.0
+
+# Environment Variables
+python-dotenv==1.0.0         # load_dotenv() 需要
+
+# Logging
 python-json-logger==2.0.7
 
-# Testing (optional for development)
-pytest==7.4.3
-httpx==0.25.2
-
+# Firebase（后端 Token 验证用，如有需要）
 firebase-admin==5.0.0
-firebase
 
-# L2核心依赖
-ortools        # Google OR-Tools 线性规划求解器
+# L2 优化求解器（二选一，根据你实际使用的保留）
+ortools                      # Google OR-Tools
+# pulp                       # 如果用 PuLP 则取消注释，注释掉 ortools
+
+# 测试（仅开发环境，生产可删除）
+# pytest>=7.4.3
+# httpx==0.25.2

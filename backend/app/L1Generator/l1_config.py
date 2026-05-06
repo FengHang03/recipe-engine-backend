@@ -7,8 +7,6 @@ from typing import List, Dict, Optional
 from pydantic import BaseModel, Field
 from enum import Enum
 
-from sqlalchemy.sql.dml import ReturningInsert
-
 # ========== 枚举定义 ==========
 
 class FoodGroup(str, Enum):
@@ -197,7 +195,7 @@ class L1Config(BaseModel):
                 FoodSubgroup.ORGAN_MUSCULAR,
             ],
             max_count=3,
-            reason="肝脏和分泌型内脏总共最多2种"
+            reason="内脏（肝脏+分泌型+肌肉型）总共最多3种"  # Fix #5: 与 max_count=3 保持一致
         ),
         
         # 规则2: 肝脏单独限制 - 最多1个

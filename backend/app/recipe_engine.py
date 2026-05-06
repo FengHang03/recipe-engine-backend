@@ -9,7 +9,8 @@ from pathlib import Path
 from pandas._libs.tslibs import conversion
 from sqlalchemy import all_
 
-BACKEND_DIR = Path(__file__).parent.parent.parent  # 指向 backend
+BACKEND_DIR = Path(__file__).parent.parent  # 指向 backend
+print(f"BACKEND_DIR: {BACKEND_DIR}")
 sys.path.append(str(BACKEND_DIR))
 
 from app.common.enums import LifeStage, NutrientID, SlotType
@@ -35,31 +36,31 @@ class RecipeEngine:
         self.l1 = l1_generator
         self.l2 = l2_optimizer
 
-    def generate_recipes(self, pet_profile: PetProfile, top_k: int = 5) -> List[OptimizationResult]:
+    def generate_recipes(self, pet: PetProfile, top_k: int = 5) -> List[OptimizationResult]:
         # L1 生成候选组合
-        candidates = self.l1.generate(pet_profile)
+        candidates = self.l1.generate(pet)
         # 收集补给包 ID
         toolkit_list = self.data_loader.get_supplement_toolkit()
         toolkit_ids = [ing.ingredient_id for ing in toolkit_list]
         # 收集所有候选组合涉及的 ID
         dict_all_ing = self.l1.generator.used_ingredients
-        all_unique_ids = list(dict_all_ing.keys())
+        all_unique_ids = list(dict_all_ing.keys()) + toolkit_ids
         all_unique_ing = list(dict_all_ing.values())
 
         # 获取营养物质宽表
         nutrition_matrix, info_df = self.data_loader.get_nutrition_matrix_for_l2(all_unique_ids)
         info_df = info_df.set_index('nutrient_id')
 
-        conversion_factors = self.data_loader.get_nutrition_unit_factor(info_df)
+        conversion_factors = self.data_loader.get_nutrition_unit_factors(info_df)
         converted_nutrient_matrix = self.data_loader.get_converted_nutrition_matrix(nutrition_matrix, conversion_factors)
-        nutrition_matrix.to_csv("clean_matrix.csv")
-        converted_nutrient_matrix.to_csv("converted_matrix.csv")
-
+        # nutrition_matrix.to_csv("clean_matrix.csv")
+        # converted_nutrient_matrix.to_csv("converted_matrix.csv")
+   
         energy_map = nutrition_matrix[NutrientID.ENERGY].to_dict()
         
         for ing in all_unique_ing:
             ing.energy_per_100g = energy_map.get(ing.ingredient_id, 0)
-        
+
         results = []
 
         # L2 批量计算
@@ -69,7 +70,7 @@ class RecipeEngine:
                 combo_flat_ingredients.extend(ing_list)
 
             l2_input = L2Input(
-                pet_profile=pet_profile,
+                pet=pet,
                 combination=comb,
                 supplement_toolkit=self.data_loader.get_supplement_toolkit(),
                 nutrient_matrix=nutrition_matrix,
@@ -77,12 +78,17 @@ class RecipeEngine:
                 nutrient_conversion_factor=conversion_factors, 
                 converted_nutrient_matrix=converted_nutrient_matrix
             )
-            
-            result = self.l2.optimize(l2_input)
+
+            try:
+                result = self.l2.optimize(l2_input)
+            except Exception:
+                logger.exception(f"L2 在第 {i+1} 个组合崩溃，combination_id={comb.recipe_id}")
+                continue
 
             # 收集成功的解
             if result.status.value == SolveStatus.OPTIMAL.value:
                 if self._is_quality_recipe(result):
+                    # logger.info(f"成功优化第 {i+1} 个组合")
                     results.append(result)
 
             # 进度日志
@@ -110,15 +116,15 @@ def example_basic_usage():
     print("=" * 80)
     print("示例1: 基础使用 - 生成标准食谱组合")
     print("=" * 80)
-    pet_profile = PetProfile(
-        target_calories=1695.9,
-        body_weight=30.0,
+    pet = PetProfile(
+        daily_calories_kcal=1695.9,
+        weight_kg=30.0,
         life_stage=LifeStage.DOG_ADULT
     )
     
     # 1. 加载数据
     logger.info("步骤1: 从数据库加载食材数据...")
-    loader = IngredientDataLoader('postgresql://postgres:Tuantuan_123@127.0.0.1:15432/tuanty_recipe')
+    loader = IngredientDataLoader(connection_string='postgresql://postgres:Tuantuan_123@127.0.0.1:15432/tuanty_recipe')
     ingredients_df = loader.load_ingredients_for_l1()
     # supplement_toolkit = loader.get_supplement_toolkit()
     logger.info(f"  加载完成! 共 {len(ingredients_df)} 个食材")
@@ -139,7 +145,7 @@ def example_basic_usage():
     recipe_engine = RecipeEngine(loader, l1_generator, l2_optimizer)
 
     logger.info(f"步骤6: 生成标准食谱...")
-    result = recipe_engine.generate_recipes(pet_profile=pet_profile)
+    result = recipe_engine.generate_recipes(pet=pet)
     logger.info(f"  生成完成! 共 {len(result)} 个组合")
 
     # 4. 查看 Top 10 组合
@@ -153,7 +159,7 @@ def example_basic_usage():
     # 5. 查看第一个组合的详细信息
     # print("\n=== 第一个组合的详细信息 ===")
     # first_combo = combinations[0]
-    # print(f"组合ID: {first_combo.combination_id}")
+    # print(f"组合ID: {first_combo.recipe_id}")
     # print(f"多样性评分: {first_combo.diversity_score:.3f}")
     # print(f"风险评分: {first_combo.risk_score:.3f}")
     # print(f"完整性评分: {first_combo.completeness_score:.3f}")
@@ -162,7 +168,7 @@ def example_basic_usage():
     # for slot_name, ing_list in first_combo.ingredients.items():
     #     print(f"  {slot_name}:")
     #     for ing in ing_list:
-    #         print(f"    - {ing.description} ({ing.ingredient_group} / {ing.food_subgroup})")
+    #         print(f"    - {ing.description} ({ing.food_group} / {ing.food_subgroup})")
 
     # from export_combinations import export_combinations_to_csv
 
@@ -207,8 +213,9 @@ def print_result(result):
         print("-" * 60)
         
         key_nutrients = [
-            "protein", "fat", "calcium", "phosphorus",
-            "selenium", "vitamin_a", "iodine", "zinc"
+            NutrientID.FAT, NutrientID.PROTEIN, NutrientID.CARBOHYDRATE,
+            NutrientID.CALCIUM, NutrientID.PHOSPHORUS, NutrientID.IRON, NutrientID.ZINC, NutrientID.IODINE,
+            NutrientID.VITAMIN_A, NutrientID.VITAMIN_E, NutrientID.SELENIUM, NutrientID.DHA, NutrientID.EPA, NutrientID.IODINE,
         ]
         
         for analysis in result.nutrient_analysis:
@@ -225,7 +232,7 @@ def print_result(result):
                   f"[{min_str:8s} - {max_str:8s}]  {status_min}{status_max}")
     
     elif result.status.value == "infeasible":
-        print("\n❌ 问题不可行!")
+        print("\n❌ 问题不可行!") 
         
         if result.infeasibility_diagnostic:
             diag = result.infeasibility_diagnostic

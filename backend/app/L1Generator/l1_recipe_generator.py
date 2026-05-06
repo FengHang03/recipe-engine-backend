@@ -12,6 +12,7 @@ L1 Recipe Generator - 食材组合生成层
 """
 
 from numpy import core
+from itertools import combinations as iter_combinations
 import pandas as pd
 from typing import List, Dict, Set, Tuple, Optional
 from dataclasses import dataclass, field
@@ -241,9 +242,7 @@ class CombinationGenerator:
                     enable_pruning
                 )
                 continue
-            # 选择 n_items 个食材
-            from itertools import combinations as iter_combinations
-            
+            # 选择 n_items 个食材            
             for selected in iter_combinations(candidates, n_items):
                 selected_list = list(selected)
 
@@ -386,7 +385,7 @@ class CombinationGenerator:
         self.combination_counter += 1
         
         return RecipeCombination(
-            combination_id=combo_id,
+            recipe_id=combo_id,
             ingredients=combo_dict,
             active_slots=list(combo_dict.keys())
         )
@@ -425,9 +424,9 @@ class CombinationGenerator:
         
         逻辑：排除 FAT_OIL 和 SUPPLEMENT，其他都算核心食材
         """
-        # 注意：请确保 ingredient_group 的字符串与数据库中的一致
+        # 注意：请确保 food_group 的字符串与数据库中的一致
         non_core_groups = ["FAT_OIL", "SUPPLEMENT"]
-        return ingredient.ingredient_group not in non_core_groups
+        return ingredient.food_group not in non_core_groups
     
     def _is_core_ingredient_slot(self, slot_name: str) -> bool:
         """
@@ -562,15 +561,26 @@ class L1RecipeGenerator:
         logger.info("开始 L1 食材组合生成")
         logger.info("=" * 60)
         
-        # 应用狗的配置 (如果有)
+        # Fix #7: 原实现直接修改 self.config（被 scheduler/generator 共享），
+        # 导致 dog_profile 的过敏原/健康限制在下次调用时依然残留。
+        # 修复：每次调用时对 config 做深拷贝，隔离本次的副作用。
         if dog_profile:
-            self._apply_dog_profile(dog_profile)
+            import copy
+            effective_config = copy.deepcopy(self.config)
+            self.scheduler.config = effective_config
+            self.generator.config = effective_config
+            self._apply_dog_profile(dog_profile, effective_config)
         
         # 生成组合
         combinations = self.generator.generate_combinations(
             max_combinations=max_combinations,
             enable_pruning=True
         )
+
+        # Fix #7: 生成完成后恢复原始 config 引用，保持生成器状态干净
+        if dog_profile:
+            self.scheduler.config = self.config
+            self.generator.config = self.config
         
         logger.info("=" * 60)
         logger.info(f"L1 生成完成! 共 {len(combinations)} 个组合")
@@ -578,7 +588,7 @@ class L1RecipeGenerator:
         
         return combinations
     
-    def _apply_dog_profile(self, dog_profile: Dict):
+    def _apply_dog_profile(self, dog_profile: Dict, config: L1Config = None):
         """
         根据狗的配置动态调整筛选规则
         
@@ -589,13 +599,14 @@ class L1RecipeGenerator:
                 'preferences': {...}
             }
         """
+        target_config = config if config is not None else self.config
         conditions = dog_profile.get('conditions', [])
         allergies = dog_profile.get('allergies', [])
         
         # 根据健康状况排除某些食材
         if 'hyperlipidemia' in conditions:
             # 高血脂: 排除高胆固醇食材
-            for slot_config in self.config.slots.values():
+            for slot_config in target_config.slots.values():
                 if 'risk_cholesterol' not in slot_config.filters.excluded_tags:
                     slot_config.filters.excluded_tags.append('risk_cholesterol')
             logger.info("检测到高血脂,已排除高胆固醇食材")
@@ -607,7 +618,7 @@ class L1RecipeGenerator:
         # 处理过敏原
         if allergies:
             allergy_tags = [f"allergen_{a}" for a in allergies]
-            for slot_config in self.config.slots.values():
+            for slot_config in target_config.slots.values():
                 slot_config.filters.excluded_tags.extend(allergy_tags)
             logger.info(f"已排除过敏原: {allergies}")
     
@@ -630,7 +641,7 @@ class L1RecipeGenerator:
         
         for combo in combinations[:top_n]:
             row = {
-                'combination_id': combo.combination_id,
+                'recipe_id': combo.recipe_id,
                 'n_ingredients': len(combo.get_all_ingredients()),
                 'active_slots': ','.join(combo.active_slots),
                 'diversity_score': round(combo.diversity_score, 3),

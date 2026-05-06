@@ -158,17 +158,25 @@ class L2Optimizer:
         Args:
             l2_input: 输入数据
             use_supplements: 是否允许使用补剂
-            
+        
         Returns:
             优化结果
         """
+        # 重置所有 solver 相关状态
+        self.solver = None
+        self.vars = {}
+        self.total_weight_var = None
+        self.nutrient_vars = {}   # 这一行非常关键
         # 准备食材列表
         base_ingredients = []
+        slot_name_map = {}
 
         for slot_name, ing_list in l2_input.combination.ingredients.items():
             base_ingredients.extend(ing_list)
+            for ingredient in ing_list:
+                slot_name_map[ingredient.ingredient_id] = slot_name
 
-        if l2_input.supplement_toolkit:
+        if use_supplements and l2_input.supplement_toolkit:
             all_ingredients = base_ingredients + l2_input.supplement_toolkit
         else:
             all_ingredients = base_ingredients
@@ -187,7 +195,7 @@ class L2Optimizer:
             return OptimizationResult(
                 status=SolveStatus.ERROR,
                 solve_time_seconds=0,
-                combination_id=l2_input.combination.combination_id
+                recipe_id=l2_input.combination.recipe_id
             )
         
         # 设置超时 (10 秒)
@@ -206,13 +214,23 @@ class L2Optimizer:
         
         # 求解
         status = self.solver.Solve()
+
+        logger.info(
+            f"comb={l2_input.combination.recipe_id}, "
+            f"use_supp={use_supplements}, "
+            f"vars={self.solver.NumVariables()}, "
+            f"constraints={self.solver.NumConstraints()}"
+        )
+        status = self.solver.Solve()
+        logger.info(f"comb={l2_input.combination.recipe_id}, raw_status={status}")
         
         # 解析结果
         return self._parse_result(
             status,
             l2_input,
             final_ingredient_list,
-            use_supplements
+            use_supplements,
+            slot_name_map=slot_name_map
         )
     
     def _create_variables(self, ingredients: List[Ingredient]):
@@ -246,9 +264,9 @@ class L2Optimizer:
         4. 槽位约束
         5. 风险标签约束
         """
-        pet_profile = l2_input.pet_profile
-        life_stage = pet_profile.life_stage
-        target_calories = pet_profile.target_calories
+        pet = l2_input.pet
+        life_stage = pet.life_stage
+        daily_calories_kcal = pet.daily_calories_kcal
         nutrition_matrix = l2_input.nutrient_matrix
         
         # ===== 1. 目标热量约束 =====
@@ -275,15 +293,15 @@ class L2Optimizer:
             total_calories_sum = self.solver.Sum(total_calories_expr)
             
             # 允许 ±5% 误差
-            self.solver.Add(total_calories_sum >= target_calories * 0.95)
-            self.solver.Add(total_calories_sum <= target_calories * 1.05)
+            self.solver.Add(total_calories_sum >= daily_calories_kcal * 0.95)
+            self.solver.Add(total_calories_sum <= daily_calories_kcal * 1.05)
 
         nutrient_conversion_factor = l2_input.nutrient_conversion_factor
         
         # ===== 2. AAFCO 营养素约束 =====
         self._add_nutrient_constraints(
             life_stage,
-            target_calories,
+            daily_calories_kcal,
             ingredients,
             nutrition_matrix,
             nutrient_conversion_factor,
@@ -299,7 +317,7 @@ class L2Optimizer:
     def _add_nutrient_constraints(
         self,
         life_stage: LifeStage,
-        target_calories: float,
+        daily_calories_kcal: float,
         ingredients: List[Ingredient],
         nutrition_matrix: pd.DataFrame,
         nutrient_conversion_factor: Dict[int, float],
@@ -360,6 +378,9 @@ class L2Optimizer:
             max_val = constraint.get("max_hard") or constraint.get("max")
             if max_val is not None:
                 self.solver.Add(current_nutrient_total * 1000 <= max_val * current_total_calories)
+            
+            if nutrient_id == NutrientID.IODINE:
+                print("iodine expr parts count =", len(nutrient_expr_parts))
         
         # ===== Ca:P 比率约束 =====
         self._add_ca_p_ratio_constraint(life_stage, ingredients, nutrition_matrix, nutrient_conversion_factor)
@@ -368,14 +389,14 @@ class L2Optimizer:
         self,
         nutrient_id: NutrientID,
         ingredients: List[Ingredient],
-        target_calories: float,
+        daily_calories_kcal: float,
         nutrient_factor: float,
     ):
         """
         计算营养素总量 (per 1000kcal)
         
         公式:
-        Total = Σ (weight_i * nutrient_per_100g_i / 100) * (1000 / target_calories)
+        Total = Σ (weight_i * nutrient_per_100g_i / 100) * (1000 / daily_calories_kcal)
         """
         nutrient_sum = 0
         
@@ -387,7 +408,7 @@ class L2Optimizer:
             nutrient_sum += (weight_var / 100) * nutrient_per_100g
         
         # 转换为 per 1000kcal
-        nutrient_per_1000kcal = nutrient_sum * (1000 / target_calories)
+        nutrient_per_1000kcal = nutrient_sum * (1000 / daily_calories_kcal)
         
         return nutrient_per_1000kcal
     
@@ -531,15 +552,15 @@ class L2Optimizer:
         objective = 0
         
         # ===== 1. 毒性罚分 (ALARA) =====
-        toxic_penalty = self._build_toxic_penalty(l2_input.pet_profile.life_stage)
+        toxic_penalty = self._build_toxic_penalty(l2_input.pet.life_stage)
         objective += WEIGHT_CONFIG["toxic"] * toxic_penalty
         
         # ===== 2. 平衡罚分 =====
-        balance_penalty = self._build_balance_penalty(l2_input.pet_profile.life_stage)
+        balance_penalty = self._build_balance_penalty(l2_input.pet.life_stage)
         objective += WEIGHT_CONFIG["balance"] * balance_penalty
         
         # ===== 3. Ca:P 理想比率罚分 =====
-        ca_p_penalty = self._build_ca_p_penalty(l2_input.pet_profile.life_stage)
+        ca_p_penalty = self._build_ca_p_penalty(l2_input.pet.life_stage)
         objective += WEIGHT_CONFIG["ca_p_ratio"] * ca_p_penalty
         
         # ===== 4. 补剂罚分 =====
@@ -657,7 +678,7 @@ class L2Optimizer:
         penalty = 0
         
         for ing in ingredients:
-            if not ing.ingredient_group.startswith('supplement'):
+            if not ing.food_group.startswith('supplement'):
                 continue
             
             weight_var = self.vars[ing.ingredient_id]
@@ -706,7 +727,8 @@ class L2Optimizer:
         status: int,
         l2_input: L2Input,
         ingredients: List[Ingredient],
-        use_supplements: bool
+        use_supplements: bool,
+        slot_name_map: Optional[Dict[str, str]] = None
     ) -> OptimizationResult:
         """解析求解结果"""
         # 转换状态
@@ -718,13 +740,16 @@ class L2Optimizer:
             solve_status = SolveStatus.INFEASIBLE
         else:
             solve_status = SolveStatus.TIMEOUT
-        
-        if solve_status == SolveStatus.INFEASIBLE:
+
+        if solve_status in {SolveStatus.INFEASIBLE, SolveStatus.TIMEOUT}:
             return OptimizationResult(
                 status=solve_status,
                 solve_time_seconds=0,
-                combination_id=l2_input.combination.combination_id,
-                infeasibility_diagnostic=self._diagnose_infeasibility(l2_input)
+                recipe_id=l2_input.combination.recipe_id,
+                infeasibility_diagnostic=(
+                    self._diagnose_infeasibility(l2_input)
+                    if solve_status == SolveStatus.INFEASIBLE else None
+                )
             )
         
         # -------------------------
@@ -768,28 +793,20 @@ class L2Optimizer:
             for k, v in nutrient_sum_dict.items()
         }
 
-        nutrient_sum_dict['CA_P_RATIO'] = (
-            nutrient_sum_dict[NutrientID.CALCIUM.value] /
-            nutrient_sum_dict[NutrientID.PHOSPHORUS.value]
-        )
+        ca = nutrient_sum_dict.get(NutrientID.CALCIUM.value, 0.0)
+        p = nutrient_sum_dict.get(NutrientID.PHOSPHORUS.value, 0.0)
+        nutrient_sum_dict["CA_P_RATIO"] = ca / p if p > 1e-9 else None
 
-        total_n6 = (
-            nutrient_sum_dict[NutrientID.LA.value] +
-            nutrient_sum_dict[NutrientID.ARA.value]
-        )
+        la  = nutrient_sum_dict.get(NutrientID.LA.value, 0.0)
+        ara = nutrient_sum_dict.get(NutrientID.ARA.value, 0.0)
+        ala = nutrient_sum_dict.get(NutrientID.ALA.value, 0.0)
+        epa = nutrient_sum_dict.get(NutrientID.EPA.value, 0.0)
+        dha = nutrient_sum_dict.get(NutrientID.DHA.value, 0.0)
 
-        total_n3 = (
-            nutrient_sum_dict[NutrientID.ALA.value] +
-            nutrient_sum_dict[NutrientID.EPA.value] +
-            nutrient_sum_dict[NutrientID.DHA.value]
-        )
-
-        nutrient_sum_dict['N6_N3_RATIO'] = total_n6 / total_n3
-
-        nutrient_sum_dict['EPA_DHA_SUM'] = (
-            nutrient_sum_dict[NutrientID.EPA.value] +
-            nutrient_sum_dict[NutrientID.DHA.value]
-        )
+        total_n6 = la + ara
+        total_n3 = ala + epa + dha
+        nutrient_sum_dict["N6_N3_RATIO"] = total_n6 / total_n3 if total_n3 > 1e-9 else None
+        nutrient_sum_dict["EPA_DHA_SUM"] = epa + dha
 
         scaled_matrix['weight'] = weight_series
 
@@ -803,13 +820,16 @@ class L2Optimizer:
             if weight < 0.1:
                 continue
 
-            is_supplement = ing.ingredient_group.startswith('supplement')
+            slot_name = slot_name_map[ing.ingredient_id]
+
+            is_supplement = ing.food_group.startswith('supplement')
 
             weights.append(OptimizedWeight(
                 ingredient_id=ing.ingredient_id,
                 ingredient_name=ing.short_name,
                 weight_grams=weight,
-                is_supplement=is_supplement
+                is_supplement=is_supplement,
+                slot_name=slot_name
             ))
 
         total_weight = float(weight_series.sum())
@@ -818,7 +838,7 @@ class L2Optimizer:
         nutrient_analysis = self._analyze_nutrients(
             weights,
             ingredients,
-            l2_input.pet_profile,
+            l2_input.pet,
             l2_input.nutrient_matrix,
             nutrient_sum_dict=nutrient_sum_dict,
         )
@@ -838,7 +858,7 @@ class L2Optimizer:
             nutrient_analysis=nutrient_analysis,
             objective_value=self.solver.Objective().Value(),
             penalty_breakdown=penalty_breakdown,
-            combination_id=l2_input.combination.combination_id,
+            recipe_id=l2_input.combination.recipe_id,
             # used_supplements=used_supplements
         )
     
@@ -846,95 +866,104 @@ class L2Optimizer:
         self,
         weights: List[OptimizedWeight],
         ingredients: List[Ingredient],
-        pet_profile: PetProfile,
+        pet: PetProfile,
         nutrition_matrix :pd.DataFrame,
         nutrient_sum_dict: Dict[int, float],
     ) -> List[NutrientAnalysis]:
         """生成营养分析报告"""
-        from dataclasses import asdict
         # build nutrition dictionary
-        # nutrition_map = nutrition_matrix.to_dict(orient='index')
-        # # 构建食材字典
-        # ing_dict = {ing.ingredient_id: ing for ing in ingredients}
+        nutrition_map = nutrition_matrix.to_dict(orient='index')
+        # 构建食材字典
+        ing_dict = {ing.ingredient_id: ing for ing in ingredients}
         
         # 计算总热量
-        # total_calories = 0
-        # energy_key  = NutrientID.ENERGY.value
+        total_calories = 0
+        energy_key  = NutrientID.ENERGY.value
         
-        # for w in weights:
-        #     ing_nutrients = nutrition_map.get(w.ingredient_id, {})
-        #     energy_per_100g = ing_nutrients.get(energy_key, 0)
-        #     total_calories += (w.weight_grams / 100) * energy_per_100g
+        for w in weights:
+            ing_nutrients = nutrition_map.get(w.ingredient_id, {})
+            energy_per_100g = ing_nutrients.get(energy_key, 0)
+            total_calories += (w.weight_grams / 100) * energy_per_100g
                 
         # 计算每个营养素
         analyses = []
-        standards = AAFCO_STANDARDS.get(pet_profile.life_stage, {}).copy()
+        standards = AAFCO_STANDARDS.get(pet.life_stage, {}).copy()
+
+        analysis_result = self.nutrient_analysis_service.analyze_from_totals(
+            totals=nutrient_sum_dict,
+            nutrient_constraints=standards,
+            normalize_per_1000_kcal=False,   # 如果 nutrient_sum_dict 已经是 per-1000kcal，就保持 False
+            target_calories_kcal=total_calories,
+            include_derived_metrics=True,
+        )
+
+        return analysis_result.analyses
         
-        for nutrient_id, constraint in standards.items():
-            # 计算总量
-            # nutrient_total = 0
+        # for nutrient_id, constraint in standards.items():
+        #     # 计算总量
+        #     # nutrient_total = 0
 
-            # for w in weights:
-            #     ing_nutrients = nutrition_map.get(w.ingredient_id, {})
-            #     nutrient_per_100g = ing_nutrients.get(nutrient_id, 0)
-            #     nutrient_total += (w.weight_grams / 100) * nutrient_per_100g
+        #     # for w in weights:
+        #     #     ing_nutrients = nutrition_map.get(w.ingredient_id, {})
+        #     #     nutrient_per_100g = ing_nutrients.get(nutrient_id, 0)
+        #     #     nutrient_total += (w.weight_grams / 100) * nutrient_per_100g
 
-            nutrient_total = nutrient_sum_dict[nutrient_id]
+        #     nutrient_total = nutrient_sum_dict[nutrient_id]
             
-            # 转换为 per 1000kcal
-            # value_per_1000kcal = nutrient_total * (1000 / total_calories) if total_calories > 0 else 0
+        #     # 转换为 per 1000kcal
+        #     # value_per_1000kcal = nutrient_total * (1000 / total_calories) if total_calories > 0 else 0
 
 
-            # 检查达标情况
-            min_val = constraint.get("min")
-            max_val = constraint.get("max_hard") or constraint.get("max")
-            ideal_val = constraint.get("ideal")
+        #     # 检查达标情况
+        #     min_val = constraint.get("min")
+        #     max_val = constraint.get("max_hard") or constraint.get("max")
+        #     ideal_val = constraint.get("ideal")
             
-            meets_min = True if min_val is None else nutrient_total >= min_val
-            meets_max = True if max_val is None else nutrient_total <= max_val
+        #     meets_min = True if min_val is None else nutrient_total >= min_val
+        #     meets_max = True if max_val is None else nutrient_total <= max_val
             
-            deviation = None
-            if ideal_val:
-                deviation = abs(nutrient_total - ideal_val)
+        #     deviation = None
+        #     if ideal_val:
+        #         deviation = abs(nutrient_total - ideal_val)
 
-            if isinstance(nutrient_id, str):
-                nutrient_name = nutrient_id.replace("_", " ").title()
-            elif isinstance(nutrient_id, NutrientID):
-                nutrient_name = nutrient_id.name.title()  # PROTEIN → Protein
-            # 兜底：其他类型（如int/None等）
-            else:
-                nutrient_name = "未知营养素"
+        #     if isinstance(nutrient_id, str):
+        #         nutrient_name = nutrient_id.replace("_", " ").title()
+        #     elif isinstance(nutrient_id, NutrientID):
+        #         nutrient_name = nutrient_id.name.title()  # PROTEIN → Protein
+        #     # 兜底：其他类型（如int/None等）
+        #     else:
+        #         nutrient_name = "未知营养素"
             
-            analyses.append(NutrientAnalysis(
-                nutrient_id=nutrient_id,
-                nutrient_name=nutrient_name,
-                value=nutrient_total,
-                unit=constraint.get("unit", ""),
-                min_required=min_val,
-                max_allowed=max_val,
-                ideal_target=ideal_val,
-                meets_min=meets_min,
-                meets_max=meets_max,
-                deviation_from_ideal=deviation
-            ))
+        #     analyses.append(NutrientAnalysis(
+        #         nutrient_id=nutrient_id,
+        #         nutrient_name=nutrient_name,
+        #         value=nutrient_total,
+        #         unit=constraint.get("unit", ""),
+        #         min_required=min_val,
+        #         max_allowed=max_val,
+        #         ideal_target=ideal_val,
+        #         meets_min=meets_min,
+        #         meets_max=meets_max,
+        #         deviation_from_ideal=deviation
+        #     ))
 
-        carb_id = NutrientID.CARBOHYDRATE  # 值是 1005
-        carb_total = nutrient_sum_dict.get(carb_id, 0.0)
+        # carb_id = NutrientID.CARBOHYDRATE  # 值是 1005
+        # carb_total = nutrient_sum_dict.get(carb_id, 0.0)
 
-        analyses.append(NutrientAnalysis(
-            nutrient_id=carb_id,
-            nutrient_name="Carbohydrate",
-            value=carb_total,
-            unit="g",          # 和其他宏量营养素单位一致
-            min_required=None,
-            max_allowed=None,
-            ideal_target=None,
-            meets_min=True,    # 没有标准，默认达标
-            meets_max=True,
-            deviation_from_ideal=None,
-        ))
+        # analyses.append(NutrientAnalysis(
+        #     nutrient_id=carb_id,
+        #     nutrient_name="Carbohydrate",
+        #     value=carb_total,
+        #     unit="g",          # 和其他宏量营养素单位一致
+        #     min_required=None,
+        #     max_allowed=None,
+        #     ideal_target=None,
+        #     meets_min=True,    # 没有标准，默认达标
+        #     meets_max=True,
+        #     deviation_from_ideal=None,
+        # ))
         
-        return analyses
+        # return analyses
     
     def _diagnose_infeasibility(self, l2_input: L2Input) -> InfeasibilityDiagnostic:
         """诊断不可行性 (简化版)"""
@@ -973,8 +1002,6 @@ class L2Optimizer:
         nutrient_matrix = l2_input.nutrient_matrix
         nutrient_info = l2_input.nutrient_info
 
-        kcal_val = nutrient_matrix.at[ing.ingredient_id, ENERGY_ID]
-
         for nutrient_id, row in nutrient_info.iterrows():
             source_unit = row['unit_name'] # DB 单位, e.g., 'mg'
             
@@ -1006,9 +1033,6 @@ class L2Optimizer:
                     nutrient_id=nutrient_id,
                     nutrient_unit=source_numerator, # "mg"
                     threshold_unit=target_numerator # "g"
-                )
-                base_factor = UnitConverter.get_base_factor(
-                    energy_series=energy
                 )
                 
                 conversion_map[nutrient_id] = factor

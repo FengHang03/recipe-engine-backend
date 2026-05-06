@@ -1,0 +1,10 @@
+.env
+.env.*
+__pycache__
+**/__pycache__
+*.pyc
+*.log
+*.csv
+.git
+.gitignore
+deploy_with_secrets.sh

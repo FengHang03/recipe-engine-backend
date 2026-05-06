@@ -15,6 +15,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,7 +49,7 @@ def example_basic_usage():
     # 5. 查看第一个组合的详细信息
     print("\n=== 第一个组合的详细信息 ===")
     first_combo = combinations[0]
-    print(f"组合ID: {first_combo.combination_id}")
+    print(f"组合ID: {first_combo.recipe_id}")
     print(f"多样性评分: {first_combo.diversity_score:.3f}")
     print(f"风险评分: {first_combo.risk_score:.3f}")
     print(f"完整性评分: {first_combo.completeness_score:.3f}")
@@ -57,7 +58,7 @@ def example_basic_usage():
     for slot_name, ing_list in first_combo.ingredients.items():
         print(f"  {slot_name}:")
         for ing in ing_list:
-            print(f"    - {ing.description} ({ing.ingredient_group} / {ing.food_subgroup})")
+            print(f"    - {ing.description} ({ing.food_group} / {ing.food_subgroup})")
 
     from export_combinations import export_combinations_to_csv
 
@@ -162,7 +163,7 @@ def example_export_for_l2():
     logger.info("准备传递给 L2 的数据...")
     
     for i, combo in enumerate(combinations[:5], 1):  # 只处理前5个
-        print(f"\n=== 组合 {i}: {combo.combination_id} ===")
+        print(f"\n=== 组合 {i}: {combo.recipe_id} ===")
         
         # 获取食材ID列表
         ingredient_ids = combo.get_ingredient_ids()

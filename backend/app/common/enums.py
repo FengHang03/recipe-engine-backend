@@ -75,30 +75,6 @@ NUTRIENT_METADATA = {
     # ... 其他项 ...
 }
 
-class NutrientGroup(Enum):
-    PROTEIN = 'protein_amino'
-    FAT = 'fat_fatty_acid'
-    MINERALS = 'minerals'
-    VITAMINS_OTHER = 'vitamins_other'
-
-    @classmethod
-    def get_name(cls, group_name: str) -> str:
-        """根据名称获取营养素组名称"""
-        try:
-            return cls(group_name).name.lower().replace('_', ' ')
-        except ValueError:
-            return f"ingredient group {group_name}"
-
-# 分组映射
-NUTRIENT_GROUPS = {
-    NutrientGroup.MINERALS: {
-        NutrientID.CALCIUM, NutrientID.PHOSPHORUS, NutrientID.ZINC, # ...
-    },
-    NutrientGroup.PROTEIN: {
-        NutrientID.ARGININE, NutrientID.LYSINE, # ...
-    }
-}
-
 class FoodGroup(str, Enum):
     """食材大类"""
     PROTEIN_MEAT = "PROTEIN_MEAT"
@@ -172,6 +148,30 @@ class FoodSubgroup(str, Enum):
     SUPPLEMENT_OMEGA3 = "supplement_omega3_lc"
     SUPPLEMENT_OTHER = "supplement_other"
 
+class NutrientGroup(Enum):
+    PROTEIN = 'protein_amino'
+    FAT = 'fat_fatty_acid'
+    MINERALS = 'minerals'
+    VITAMINS_OTHER = 'vitamins_other'
+
+    @classmethod
+    def get_name(cls, group_name: str) -> str:
+        """根据名称获取营养素组名称"""
+        try:
+            return cls(group_name).name.lower().replace('_', ' ')
+        except ValueError:
+            return f"ingredient group {group_name}"
+
+# 分组映射
+NUTRIENT_GROUPS = {
+    NutrientGroup.MINERALS: {
+        NutrientID.CALCIUM, NutrientID.PHOSPHORUS, NutrientID.ZINC, # ...
+    },
+    NutrientGroup.PROTEIN: {
+        NutrientID.ARGININE, NutrientID.LYSINE, # ...
+    }
+}
+
 class Species(str, Enum):
     DOG = "dog"
     CAT = "cat"
@@ -195,31 +195,32 @@ class ActivityLevel(str,Enum):
     HIGH = "high"
     EXTREME = "extreme"
 
-class ReproductiveStatus(str, Enum):
+class SterilizationStatus(str, Enum):
     INTACT = "intact"
     NEUTERED = "neutered"
 
-class ReproState(str, Enum):
+class ReproductiveStage(str, Enum):
     NONE = "none"
     PREGNANT = "pregnant"
     LACTATING = "lactating"
 
 # === L1 & L2 ===
-class SlotType(Enum):
-    """食材槽位类型"""
-    MAIN_PROTEIN = "main_protein"
-    ORGAN_LIVER = "organ_liver"
-    ORGAN_SECRETING = "organ_secreting"
-    ORGAN_MUSCULAR = "organ_muscular"
-    MINERAL_SHELLFISH = "mineral_shellfish"
-    VEGETABLE = "vegetable"
-    CARBOHYDRATE = "carbohydrate"
-    OMEGA3_LC = "omega3_lc"
-    OMEGA6_LA = "omega6_la"
-    SUPPLEMENT = "supplement"
-    SUPPLEMENT_CALCIUM = "supplement_calcium"
-    IODINE = "iodine"
-    EGG = "egg"
-    SHELLFISH_PROTEIN = "shellfish_protein"
-    SHELLFISH_MINERAL = "shellfish_mineral"
-    CALCIUM = "calcium"
+class SlotType(str, Enum):
+    """槽位类型（值用 snake_case，作为字典 key 和 slot_name 字符串）"""
+    MAIN_PROTEIN         = "main_protein"
+    SHELLFISH_PROTEIN    = "shellfish_protein"
+    EGG                  = "egg"
+    CALCIUM              = "calcium"
+    MINERAL_SHELLFISH    = "mineral_shellfish"
+    ORGAN_LIVER          = "organ_liver"
+    ORGAN_SECRETING      = "organ_secreting"
+    ORGAN_MUSCULAR       = "organ_muscular"
+    VEGETABLE            = "vegetable"
+    OMEGA3_LC            = "omega3_lc"
+    OMEGA6_LA            = "omega6_la"
+    CARBOHYDRATE         = "carbohydrate"
+    IODINE               = "iodine"
+    FIBER                = "fiber"
+    SUPPLEMENT           = "supplement"
+    SUPPLEMENT_CALCIUM   = "supplement_calcium"
+    OPTIONAL_INGREDIENTS = "optional_ingredients"

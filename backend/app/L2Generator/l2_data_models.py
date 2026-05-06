@@ -16,7 +16,7 @@ BACKEND_DIR = Path(__file__).parent.parent.parent
 sys.path.append(str(BACKEND_DIR))
 
 from app.common.enums import (
-    LifeStage, FoodGroup, NutrientID, ReproductiveStatus, ReproState,
+    LifeStage, FoodGroup, NutrientID, SterilizationStatus, ReproductiveStage, Species,
 )
 
 from app.common.models import (
@@ -68,18 +68,18 @@ class InfeasibilityReason(Enum):
 @dataclass
 class PetProfile:
     """宠物画像"""
-    target_calories: float          # 目标热量 (kcal/day)
-    body_weight: float              # 体重 (kg)
-    life_stage: LifeStage           # 生命阶段
+    daily_calories_kcal: float          # 目标热量 (kcal/day)
+    weight_kg: float
+    life_stage: LifeStage 
     
     # 可选字段
-    allergies: List[str] = field(default_factory=list)
+    species: Species = Species.DOG
     size_class: Optional[str] = "medium"
     activity_level: Optional[str] = None
+    sterilization_status:Optional[SterilizationStatus] = 'intact'
+    repro_status: Optional[ReproductiveStage] = None
+    allergies: List[str] = field(default_factory=list)
     health_conditions: List[str] = field(default_factory=list)
-    reproductive_status:Optional[ReproductiveStatus] = 'intact'
-    repro_status: Optional[ReproState] = None
-
 
 @dataclass
 class Ingredient:
@@ -98,14 +98,13 @@ class Ingredient:
     
     # 补剂相关
     is_supplement: bool = False
-    supplement_cost: float = 1.0    # 补剂的基础成本系数
 
 
 
 @dataclass
 class L2Input:
     """L2 引擎的完整输入"""
-    pet_profile: PetProfile
+    pet: PetProfile
     combination: RecipeCombination
     supplement_toolkit: List[Ingredient]  # 可用的补剂列表
 
@@ -124,6 +123,7 @@ class OptimizedWeight:
     ingredient_name: str
     weight_grams: float
     is_supplement: bool = False
+    slot_name: Optional[str] = None
 
 
 @dataclass
@@ -175,7 +175,7 @@ class OptimizationResult:
     infeasibility_diagnostic: Optional[InfeasibilityDiagnostic] = None
     
     # 元数据
-    combination_id: str = ""
+    recipe_id: str = ""
     used_supplements: List[str] = field(default_factory=list)
 
 

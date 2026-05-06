@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(python -m pytest tests/unit/domains/explain/ -x -q)",
+      "Bash(python -m pytest tests/unit/domains/explain/ -q)",
+      "Bash(python -c ' *)"
+    ]
+  }
+}

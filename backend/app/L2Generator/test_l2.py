@@ -197,9 +197,9 @@ def create_test_case():
     """创建一个完整的测试用例"""
     
     # 宠物画像: 成年狗,10kg,500 kcal/day
-    pet_profile = PetProfile(
-        target_calories=1695.9,
-        body_weight=30.0,
+    pet = PetProfile(
+        daily_calories_kcal=1695.9,
+        weight_kg=30.0,
         life_stage=LifeStage.DOG_ADULT
     )
     
@@ -208,7 +208,7 @@ def create_test_case():
     ingredients = create_test_ingredients()
     
     combination = RecipeCombination(
-        combination_id="test_combo_001",
+        recipe_id="test_combo_001",
         ingredients=ingredients,
         # main_protein_category="chicken"
     )
@@ -219,7 +219,7 @@ def create_test_case():
     
     # 完整输入
     l2_input = L2Input(
-        pet_profile=pet_profile,
+        pet=pet,
         combination=combination,
         supplement_toolkit=supplements
     )
@@ -256,7 +256,7 @@ def example_basic_usage():
     # 5. 查看第一个组合的详细信息
     print("\n=== 第一个组合的详细信息 ===")
     first_combo = combinations[0]
-    print(f"组合ID: {first_combo.combination_id}")
+    print(f"组合ID: {first_combo.recipe_id}")
     print(f"多样性评分: {first_combo.diversity_score:.3f}")
     print(f"风险评分: {first_combo.risk_score:.3f}")
     print(f"完整性评分: {first_combo.completeness_score:.3f}")
@@ -265,7 +265,7 @@ def example_basic_usage():
     for slot_name, ing_list in first_combo.ingredients.items():
         print(f"  {slot_name}:")
         for ing in ing_list:
-            print(f"    - {ing.description} ({ing.ingredient_group} / {ing.food_subgroup})")
+            print(f"    - {ing.description} ({ing.food_group} / {ing.food_subgroup})")
 
     from export_combinations import export_combinations_to_csv
 
@@ -349,8 +349,8 @@ def main():
     print("\n📝 创建测试用例...")
     l2_input = create_test_case()
     
-    print(f"宠物: {l2_input.pet_profile.life_stage.value}, {l2_input.pet_profile.body_weight} kg")
-    print(f"目标热量: {l2_input.pet_profile.target_calories} kcal/day")
+    print(f"宠物: {l2_input.pet.life_stage.value}, {l2_input.pet.weight_kg} kg")
+    print(f"目标热量: {l2_input.pet.daily_calories_kcal} kcal/day")
     print(f"食材数量: {len(l2_input.combination.ingredients)}")
     print(f"补剂数量: {len(l2_input.supplement_toolkit)}")
     

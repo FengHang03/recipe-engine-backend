@@ -169,76 +169,76 @@ AAFCO_STANDARDS = {
             "max": 2.0,
             "ideal": 1.3,       # 理想比率
             "unit": "",
-            "priority": 0.05,
+            "priority": 0,
             "source": "AAFCO 2023"
         },
         
         # ===== 矿物质 (微量元素) =====
-        # NutrientID.IRON: {
-        #     "min": 10,
-        #     "max": 500,         # NRC Safe Upper Limit
-        #     "unit": "MG",
-        #     "nutrient_id": NutrientID.IRON,
-        #     "priority": 1,
-        #     "source": "AAFCO 2023, NRC SUL"
-        # },
+        NutrientID.IRON: {
+            "min": 10,
+            "max": 500,         # NRC Safe Upper Limit
+            "unit": "MG",
+            "nutrient_id": NutrientID.IRON,
+            "priority": 1,
+            "source": "AAFCO 2023, NRC SUL"
+        },
         
-        # NutrientID.ZINC: {
-        #     "min": 20,
-        #     "max": 250,         # NRC Safe Upper Limit
-        #     "ideal": 30,        # 鼓励稍高于最低要求
-        #     "unit": "MG",
-        #     "nutrient_id": NutrientID.ZINC,
-        #     "priority": 1,
-        #     "penalty_type": "balance",
-        #     "source": "AAFCO 2023, NRC SUL"
-        # },
+        NutrientID.ZINC: {
+            "min": 20,
+            "max": 250,         # NRC Safe Upper Limit
+            "ideal": 30,        # 鼓励稍高于最低要求
+            "unit": "MG",
+            "nutrient_id": NutrientID.ZINC,
+            "priority": 2,
+            "penalty_type": "balance",
+            "source": "AAFCO 2023, NRC SUL"
+        },
         
-        # NutrientID.COPPER: {
-        #     "min": 1.83,
-        #     "max": 30,          # NRC Safe Upper Limit
-        #     "ideal": 5.0,       # 理想范围: 3-8 mg
-        #     "unit": "MG",
-        #     "nutrient_id": NutrientID.COPPER,
-        #     "priority": 1,
-        #     "penalty_type": "balance",
-        #     "source": "AAFCO 2023, NRC SUL"
-        # },
+        NutrientID.COPPER: {
+            "min": 1.83,
+            "max": 30,          # NRC Safe Upper Limit
+            "ideal": 5.0,       # 理想范围: 3-8 mg
+            "unit": "MG",
+            "nutrient_id": NutrientID.COPPER,
+            "priority": 1,
+            "penalty_type": "balance",
+            "source": "AAFCO 2023, NRC SUL"
+        },
         
-        # NutrientID.MANGANESE: {
-        #     "min": 1.25,
-        #     "max": None,
-        #     "ideal": 2.0,       # 建议有安全冗余
-        #     "unit": "MG",
-        #     "nutrient_id": NutrientID.MANGANESE,
-        #     "priority": 1,
-        #     "penalty_type": "balance",
-        #     "source": "AAFCO 2023"
-        # },
+        NutrientID.MANGANESE: {
+            "min": 1.25,
+            "max": None,
+            "ideal": 2.0,       # 建议有安全冗余
+            "unit": "MG",
+            "nutrient_id": NutrientID.MANGANESE,
+            "priority": 2,
+            "penalty_type": "balance",
+            "source": "AAFCO 2023"
+        },
         
-        # NutrientID.SELENIUM: {
-        #     "min": 80,          # 0.08 mg = 80 µg
-        #     "max": 500,         # 0.5 mg = 500 µg
-        #     "safe_target": 120, # ALARA: 越低越好
-        #     "warning_target": 300,
-        #     "unit": "UG",
-        #     "nutrient_id": NutrientID.SELENIUM,
-        #     "priority": 0,      # P0 - 毒性风险
-        #     "penalty_type": "alara",
-        #     "source": "AAFCO 2023"
-        # },
+        NutrientID.SELENIUM: {
+            "min": 80,          # 0.08 mg = 80 µg
+            "max": 500,         # 0.5 mg = 500 µg
+            "safe_target": 120, # ALARA: 越低越好
+            "warning_target": 300,
+            "unit": "UG",
+            "nutrient_id": NutrientID.SELENIUM,
+            "priority": 2,      # P0 - 毒性风险
+            "penalty_type": "alara",
+            "source": "AAFCO 2023"
+        },
         
-        # NutrientID.IODINE: {
-        #     "min": 0.25,
-        #     "max": 2.75,
-        #     "safe_target": 0.5, # ALARA
-        #     "warning_target": 1.5,
-        #     "unit": "MG",
-        #     "nutrient_id": NutrientID.IODINE,
-        #     "priority": 0,      # P0 - 毒性风险
-        #     "penalty_type": "alara",
-        #     "source": "AAFCO 2023"
-        # },
+        NutrientID.IODINE: {
+            "min": 0.25,
+            "max": 2.75,
+            "safe_target": 0.5, # ALARA
+            "warning_target": 1.5,
+            "unit": "MG",
+            "nutrient_id": NutrientID.IODINE,
+            "priority": 0,      # P0 - 毒性风险
+            "penalty_type": "alara",
+            "source": "AAFCO 2023"
+        },
 
         NutrientID.CHLORIDE: {
             "min": 0.30,        # 1.5 g

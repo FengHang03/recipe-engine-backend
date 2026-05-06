@@ -40,14 +40,14 @@ def _export_detailed_format(
     详细格式：每个槽位单独一列
     
     CSV 格式示例:
-    combination_id | main_protein | carbohydrate | calcium | ... | diversity_score | risk_score
+    recipe_id | main_protein | carbohydrate | calcium | ... | diversity_score | risk_score
     combo_0001     | Chicken      | Rice         | Calcium | ... | 0.75           | 0.2
     """
     rows = []
     
     for combo in combinations:
         row = {
-            'combination_id': combo.combination_id,
+            'recipe_id': combo.recipe_id,
             'n_ingredients': len(combo.get_all_ingredients()),
             'n_active_slots': len(combo.active_slots),
             'diversity_score': round(combo.diversity_score, 3),
@@ -74,7 +74,7 @@ def _export_detailed_format(
     df = pd.DataFrame(rows)
     
     # 排序列：先显示基本信息，再显示槽位，最后显示评分
-    basic_cols = ['combination_id', 'n_ingredients', 'n_active_slots']
+    basic_cols = ['recipe_id', 'n_ingredients', 'n_active_slots']
     score_cols = ['diversity_score', 'risk_score', 'completeness_score']
     slot_cols = [col for col in df.columns if col.startswith('slot_')]
     other_cols = [col for col in df.columns 
@@ -101,7 +101,7 @@ def _export_compact_format(
     紧凑格式：所有食材在一列
     
     CSV 格式示例:
-    combination_id | ingredients | active_slots | diversity_score
+    recipe_id | ingredients | active_slots | diversity_score
     combo_0001     | Chicken, Rice, Calcium | main_protein, carb, calcium | 0.75
     """
     rows = []
@@ -113,7 +113,7 @@ def _export_compact_format(
         ingredient_ids = ', '.join([ing.ingredient_id for ing in all_ingredients])
         
         row = {
-            'combination_id': combo.combination_id,
+            'recipe_id': combo.recipe_id,
             'ingredients': ingredient_names,
             'ingredient_ids': ingredient_ids,
             'n_ingredients': len(all_ingredients),
@@ -151,7 +151,7 @@ def export_combinations_to_excel(
         overview_data = []
         for combo in combinations:
             overview_data.append({
-                'combination_id': combo.combination_id,
+                'recipe_id': combo.recipe_id,
                 'n_ingredients': len(combo.get_all_ingredients()),
                 'active_slots': ', '.join(combo.active_slots),
                 'diversity_score': round(combo.diversity_score, 3),
@@ -168,7 +168,7 @@ def export_combinations_to_excel(
             for slot_name, ing_list in combo.ingredients.items():
                 for ing in ing_list:
                     detail_data.append({
-                        'combination_id': combo.combination_id,
+                        'recipe_id': combo.recipe_id,
                         'slot_name': slot_name,
                         'ingredient_id': ing.ingredient_id,
                         'ingredient_name': ing.short_name,
