@@ -206,10 +206,6 @@ class PresetRecipeSpec(BaseModel):
             raise ValueError("PresetRecipeSpec.ingredients must not be empty")
         return self
 
-
-class PresetRecipeRef(BaseModel):
-    recipe_id: str
-
 # ---------------------------------------------------------------------------
 # Beginner DIY
 # ---------------------------------------------------------------------------
